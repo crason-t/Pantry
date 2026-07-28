@@ -13,9 +13,24 @@ work, not part of this build.
 2. **Structured reformat** — title, servings, prep/cook/total time,
    ingredients (with quantities), ordered steps, equipment — into an easily
    scannable layout.
-3. **"Why this dish works"** — a culinary insight explaining what makes the
-   dish taste the way it does (technique, flavor pairing, etc.), generated
-   once at ingestion time.
+3. **"Why this dish works"** — culinary insight highlighting the important
+   things actually happening in the recipe, not just the literal steps. Two
+   parts, inspired by cookwell.com's recipe breakdowns:
+   - A shared, curated **glossary** of terms in three categories —
+     **Flavor** (aroma, taste, texture, sight, physical, human/emotional —
+     the elements that make up perceived flavor), **Technique** (bake, sear,
+     braise, emulsify by hand, etc. — the methods used to cook), and
+     **Reaction** (Maillard reaction, caramelization, gelation, emulsification,
+     fermentation, etc. — the food-science mechanism a technique triggers).
+     Each term has a fixed, reusable definition, independent of any one
+     recipe.
+   - Per-recipe **callouts** generated at ingestion time: for the
+     ingredients/steps that matter, tag the relevant glossary term(s) and add
+     a short recipe-specific note on why it applies *here* (e.g. technique
+     `sear` + reaction `maillard_reaction`, note: "this is what builds the
+     fond the pan sauce depends on"). Callouts are anchored inline to a
+     specific step/ingredient where possible, and surfaced in both the
+     scannable layout and cook mode — not dumped as one paragraph.
 4. **Ingredient substitutions** — on-demand suggestions for ingredients the
    user might not have.
 5. **Adaptation** for a different cooking method or equipment (e.g. different
@@ -54,18 +69,33 @@ better once mobile is in scope.
 - **User** — id, email (unique), hashed_password, created_at
 - **Recipe** — id, title, servings, prep_time, cook_time, total_time,
   equipment (JSON list), source_url (nullable), raw_source_text (nullable),
-  created_by_user_id (FK), why_it_works (text, nullable — cached insight),
-  created_at
+  created_by_user_id (FK), created_at
 - **Ingredient** — id, recipe_id (FK), position, quantity, unit, name, notes
   (nullable), raw_text
 - **Step** — id, recipe_id (FK), position, instruction (text)
+- **GlossaryTerm** — id, category (enum: flavor | technique | reaction), slug
+  (unique, e.g. `maillard_reaction`), name, definition (text). Shared
+  reference data, not tied to any one recipe — seeded/curated up front (the
+  domain is finite and well-known: a fixed list of techniques, reactions, and
+  flavor elements), not generated per ingestion.
+- **RecipeInsight** ("why this dish works" callouts) — id, recipe_id (FK),
+  glossary_term_id (FK), note (text, nullable — recipe-specific context, e.g.
+  why this technique/reaction matters *in this recipe*), step_id (FK to Step,
+  nullable), ingredient_id (FK to Ingredient, nullable), position. Generated
+  at ingestion time: Claude tags the relevant glossary term(s) per
+  step/ingredient and writes the short recipe-specific note. Nullable
+  step/ingredient FKs let a callout be anchored inline where relevant, or
+  left general when it isn't about one specific line.
 - **SavedRecipe** (cookbook entry) — id, user_id (FK), recipe_id (FK),
   saved_at, unique(user_id, recipe_id)
 
-Ingredients and steps are child rows (not JSON blobs) so scaling and the
-scannable-structure view can operate on typed data. Substitutions and
-adaptations are **not persisted** for MVP — computed on demand via Claude each
-time; add caching later only if latency/cost becomes a real problem.
+Ingredients, steps, and insights are child rows (not JSON blobs) so scaling,
+the scannable-structure view, and inline insight anchoring can all operate on
+typed data. Substitutions and adaptations are still **not persisted** for
+MVP — computed on demand via Claude each time; the glossary is the one
+exception to "don't persist LLM output," because its content is fixed
+reference knowledge rather than a per-recipe generation, so it's seeded once
+(e.g. a migration/fixture) rather than regenerated on every ingestion.
 
 ## Recipe Ingestion Architecture
 
