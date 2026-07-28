@@ -25,6 +25,24 @@ export interface RecipeStep {
   instruction: string;
 }
 
+export type GlossaryCategory = "flavor" | "technique" | "reaction";
+
+export interface GlossaryTerm {
+  slug: string;
+  category: GlossaryCategory;
+  name: string;
+  definition: string;
+}
+
+export interface RecipeInsight {
+  id: number;
+  glossary_term: GlossaryTerm;
+  note: string | null;
+  step_id: number | null;
+  ingredient_id: number | null;
+  position: number;
+}
+
 export interface Recipe {
   id: number;
   title: string;
@@ -38,6 +56,7 @@ export interface Recipe {
   created_at: string;
   ingredients: Ingredient[];
   steps: RecipeStep[];
+  insights: RecipeInsight[];
 }
 
 export interface RecipeSummary {

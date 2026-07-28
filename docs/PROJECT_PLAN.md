@@ -75,19 +75,19 @@ features (insights, substitutions, adaptation, scaling, guided cook mode)
       via curl end-to-end (persist, fetch, idempotent save, cookbook list)
       and in an actual browser (ingest → detail page with ingredients/steps →
       save → shows up on /cookbook)
-- [x] "Why this works" backend: `generate_recipe_insights` (Claude,
-      structured output) tags relevant seeded `GlossaryTerm`s, writes a
-      recipe-specific note per tag, anchors to a step/ingredient index or
-      `general`. `persist_recipe_insights` resolves indices to real
-      step/ingredient rows (best-effort: unknown slugs or out-of-range
-      indices are skipped, not errors). Runs at ingestion time, non-blocking
-      (a Claude failure here doesn't fail the whole ingest). Exposed via
-      nested `insights` on `RecipeRead` (both ingest response and
-      `GET /recipes/{id}`). Verified via curl on a real recipe (seared steak
-      + pan sauce): 6 accurate, correctly-anchored insights generated
-      (sear/maillard/deglaze/acidity/emulsification/umami), each a genuine
-      recipe-specific note rather than a repeated glossary definition.
-      Frontend UI panel still outstanding.
+- [x] "Why this works" insight endpoint + UI panel. Backend:
+      `generate_recipe_insights` (Claude, structured output) tags relevant
+      seeded `GlossaryTerm`s, writes a recipe-specific note per tag, anchors
+      to a step/ingredient index or `general`; `persist_recipe_insights`
+      resolves indices to real rows (best-effort: unknown slugs/out-of-range
+      indices are skipped, not errors); runs at ingestion time, non-blocking.
+      Exposed via nested `insights` on `RecipeRead`. Frontend:
+      `InsightCallout` component renders each insight (category + glossary
+      term name badge, recipe-specific note) inline directly under the
+      ingredient/step it's anchored to; unanchored insights surface in a
+      "Why this dish works" panel above the ingredients list — not a raw
+      data dump. Verified via curl (seared steak + pan sauce: 6 accurate,
+      correctly-anchored insights) and in an actual browser end-to-end.
 - [ ] Ingredient substitution endpoint + UI
 - [ ] Equipment/method adaptation endpoint + UI
 - [ ] Serving-scale endpoint + UI

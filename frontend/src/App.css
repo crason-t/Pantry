@@ -14,3 +14,27 @@ label {
 [role="alert"] {
   color: #c0392b;
 }
+
+.insight-callout {
+  margin: 6px 0 10px 0;
+  padding: 8px 12px;
+  border-left: 3px solid var(--accent, #6b8f71);
+  background: rgba(107, 143, 113, 0.08);
+  border-radius: 0 6px 6px 0;
+  max-width: 480px;
+}
+
+.insight-badge {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.75;
+  margin-bottom: 4px;
+}
+
+.insight-note {
+  margin: 0;
+  font-size: 0.9rem;
+}
