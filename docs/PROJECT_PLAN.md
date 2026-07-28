@@ -8,8 +8,8 @@ what's next" doc; `docs/MVP.md` stays the stable feature/architecture spec.
 
 Repo has a README, `.gitignore`, `CLAUDE.md`, and the MVP spec. Docker
 Desktop, Postgres, the FastAPI backend skeleton, the full DB schema (via
-Alembic), and JWT auth (register/login/`/auth/me`) are all verified working
-locally. No Anthropic wiring, ingestion code, or frontend yet.
+Alembic), JWT auth (register/login/`/auth/me`), and the Anthropic client
+wrapper are all verified working locally. No ingestion code or frontend yet.
 
 ## Build sequence
 
@@ -32,9 +32,10 @@ locally. No Anthropic wiring, ingestion code, or frontend yet.
       user with a valid token and 401s without one, wrong password 401s.
       Note: switched from `passlib[bcrypt]` to the `bcrypt` package directly —
       passlib 1.7.4 is unmaintained and breaks against `bcrypt` 5.x
-- [ ] Anthropic wiring: `config.py` reads `ANTHROPIC_API_KEY`/`CLAUDE_MODEL`;
-      `services/claude_client.py` builds one shared client — confirm
-      connectivity with a throwaway test call
+- [x] Anthropic wiring: `config.py` reads `ANTHROPIC_API_KEY`/`CLAUDE_MODEL`;
+      `services/claude_client.py` builds one shared, cached client — verified:
+      a live `claude-opus-5` call through the wrapper returned `"OK"` with
+      `stop_reason: end_turn`
 - [ ] Recipe ingestion skeleton: `url_fetcher` + `jsonld_parser` (no LLM
       dependency), `claude_extractor` stub with its structured-output schema,
       wired into a placeholder `POST /recipes/ingest`
