@@ -6,9 +6,10 @@ what's next" doc; `docs/MVP.md` stays the stable feature/architecture spec.
 
 ## Status: Scaffolding
 
-Repo has a README, `.gitignore`, `CLAUDE.md`, and the MVP spec. Docker Desktop
-is installed and Postgres is verified working locally. Backend skeleton
-(FastAPI app, config, health route) is in progress; no frontend code yet.
+Repo has a README, `.gitignore`, `CLAUDE.md`, and the MVP spec. Docker
+Desktop, Postgres, the FastAPI backend skeleton, the full DB schema (via
+Alembic), and JWT auth (register/login/`/auth/me`) are all verified working
+locally. No Anthropic wiring, ingestion code, or frontend yet.
 
 ## Build sequence
 
@@ -17,15 +18,20 @@ is installed and Postgres is verified working locally. Backend skeleton
 - [x] `docker-compose.yml` + `.env.example` for local Postgres — verified:
       Docker Desktop installed, `docker compose up -d db` starts `pantry-db-1`
       and `pg_isready` confirms it accepts connections
-- [ ] Backend skeleton: FastAPI app, `config.py` (env-based settings),
-      `GET /health` (pings DB) — verify `uvicorn` runs and reaches Postgres
-- [ ] DB models + Alembic migration for `User`, `Recipe`, `Ingredient`,
+- [x] Backend skeleton: FastAPI app, `config.py` (env-based settings),
+      `GET /health` (pings DB) — verified: `uv sync` on Python 3.12,
+      `uvicorn` boots, `GET /health` returns `{"status": "ok", "db": "ok"}`
+- [x] DB models + Alembic migration for `User`, `Recipe`, `Ingredient`,
       `Step`, `GlossaryTerm`, `RecipeInsight`, `SavedRecipe` (updated per the
-      glossary/insight-callouts rewrite in `docs/MVP.md`) — verify
-      `alembic upgrade head` applies cleanly, including a `GlossaryTerm` seed
-      fixture
-- [ ] Auth: register/login endpoints, password hashing, JWT issue/verify,
-      `get_current_user` dependency — verify via Swagger UI (`/docs`) or `curl`
+      glossary/insight-callouts rewrite in `docs/MVP.md`) — verified:
+      `alembic upgrade head` creates all 7 tables cleanly, and
+      `app/seed_glossary.py` idempotently seeds 8 starter glossary terms
+- [x] Auth: register/login endpoints, password hashing, JWT issue/verify,
+      `get_current_user` dependency — verified via `curl`: register, duplicate
+      email rejected (400), login issues a working JWT, `/auth/me` returns the
+      user with a valid token and 401s without one, wrong password 401s.
+      Note: switched from `passlib[bcrypt]` to the `bcrypt` package directly —
+      passlib 1.7.4 is unmaintained and breaks against `bcrypt` 5.x
 - [ ] Anthropic wiring: `config.py` reads `ANTHROPIC_API_KEY`/`CLAUDE_MODEL`;
       `services/claude_client.py` builds one shared client — confirm
       connectivity with a throwaway test call

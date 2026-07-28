@@ -57,7 +57,7 @@ work, not part of this build.
 | Backend | FastAPI (Python) | Async-friendly for LLM calls + URL fetches; Pydantic validation pairs naturally with Claude's structured-output schemas |
 | Frontend | Vite + React + TypeScript, plain SPA | App lives entirely behind login — no SSR/SEO need; keeps a clean API boundary a future mobile app can reuse |
 | Database | PostgreSQL via Docker Compose | Trivial to run locally; JSONB for flexible fields; avoids a migration the moment this becomes multi-user |
-| Auth | Rolled JWT auth (passlib + python-jose + OAuth2PasswordBearer) | Wanted real login built now; rolling it is ~half a day and keeps everything transparent, no external account/dependency |
+| Auth | Rolled JWT auth (bcrypt + python-jose + OAuth2PasswordBearer) | Wanted real login built now; rolling it is ~half a day and keeps everything transparent, no external account/dependency. Uses `bcrypt` directly rather than `passlib` — passlib 1.7.4 is unmaintained and breaks against `bcrypt` 5.x |
 | LLM | Anthropic Claude API, `anthropic` Python SDK, default model `claude-opus-5` (configurable via `CLAUDE_MODEL`) | Structured outputs (`output_config.format`) fit recipe parsing well |
 
 These are defaults, not locked in — revisit if e.g. SQLite (simpler, single-user)

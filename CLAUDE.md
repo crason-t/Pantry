@@ -17,7 +17,7 @@ Long-term vision is a full home pantry/inventory + recipe + grocery-budget assis
 - **Backend**: FastAPI (Python), chosen for async support (LLM calls + URL fetches) and because Pydantic validation pairs naturally with Claude's structured-output JSON schemas.
 - **Frontend**: Vite + React + TypeScript, a plain SPA (not Next.js) — the app lives entirely behind login, so there's no SSR/SEO need, and a plain SPA keeps a clean API boundary that a future React Native app can reuse.
 - **Database**: PostgreSQL via Docker Compose.
-- **Auth**: Rolled JWT auth (`passlib` + `python-jose` + `OAuth2PasswordBearer`) rather than a hosted provider — a deliberate choice to keep everything transparent and dependency-free for a single-user MVP.
+- **Auth**: Rolled JWT auth (`bcrypt` + `python-jose` + `OAuth2PasswordBearer`) rather than a hosted provider — a deliberate choice to keep everything transparent and dependency-free for a single-user MVP. Uses `bcrypt` directly, not `passlib` — passlib 1.7.4 is unmaintained and breaks against `bcrypt` 5.x.
 - **LLM**: Anthropic Claude API via the official `anthropic` Python SDK, default model `claude-opus-5` (configurable via `CLAUDE_MODEL` env var so individual call sites can be swapped independently).
 
 The backend is meant to stay a clean, reusable JSON API — not entangled with the web frontend — because a mobile (React Native) client is planned to consume the same API later.
