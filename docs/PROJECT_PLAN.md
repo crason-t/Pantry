@@ -8,8 +8,9 @@ what's next" doc; `docs/MVP.md` stays the stable feature/architecture spec.
 
 Repo has a README, `.gitignore`, `CLAUDE.md`, and the MVP spec. Docker
 Desktop, Postgres, the FastAPI backend skeleton, the full DB schema (via
-Alembic), JWT auth (register/login/`/auth/me`), and the Anthropic client
-wrapper are all verified working locally. No ingestion code or frontend yet.
+Alembic), JWT auth (register/login/`/auth/me`), the Anthropic client
+wrapper, and the recipe ingestion pipeline (`POST /recipes/ingest`, no
+persistence yet) are all verified working locally. No frontend yet.
 
 ## Build sequence
 
@@ -36,9 +37,14 @@ wrapper are all verified working locally. No ingestion code or frontend yet.
       `services/claude_client.py` builds one shared, cached client — verified:
       a live `claude-opus-5` call through the wrapper returned `"OK"` with
       `stop_reason: end_turn`
-- [ ] Recipe ingestion skeleton: `url_fetcher` + `jsonld_parser` (no LLM
-      dependency), `claude_extractor` stub with its structured-output schema,
-      wired into a placeholder `POST /recipes/ingest`
+- [x] Recipe ingestion skeleton: `url_fetcher` + `jsonld_parser` (no LLM
+      dependency), `claude_extractor` (Claude structured-output extraction via
+      `messages.parse()` + `ParsedRecipe`), `pipeline.py` (JSON-LD first, falls
+      back to Claude), wired into `POST /recipes/ingest` (auth-gated,
+      parse-and-return only — no persistence yet). Verified: JSON-LD parser
+      against a synthetic schema.org fixture, Claude extraction against
+      pasted text, and the full authed route end-to-end (401 without auth,
+      400 with neither `url` nor `text`, correct structured JSON otherwise)
 - [ ] Frontend skeleton: Vite + React + TS scaffold, router shell,
       `api/client.ts`, login/register pages wired end-to-end against the
       backend auth endpoints
