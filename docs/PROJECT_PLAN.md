@@ -6,19 +6,24 @@ what's next" doc; `docs/MVP.md` stays the stable feature/architecture spec.
 
 ## Status: Scaffolding
 
-Repo has a README, `.gitignore`, `CLAUDE.md`, and the MVP spec. No backend or
-frontend code exists yet.
+Repo has a README, `.gitignore`, `CLAUDE.md`, and the MVP spec. Docker Desktop
+is installed and Postgres is verified working locally. Backend skeleton
+(FastAPI app, config, health route) is in progress; no frontend code yet.
 
 ## Build sequence
 
 - [x] `git init` + initial commit (README, `.gitignore`, `docs/MVP.md`)
 - [x] `CLAUDE.md`
-- [ ] `docker-compose.yml` + `.env.example` for local Postgres — verify
-      `docker compose up -d db` works before writing app code
+- [x] `docker-compose.yml` + `.env.example` for local Postgres — verified:
+      Docker Desktop installed, `docker compose up -d db` starts `pantry-db-1`
+      and `pg_isready` confirms it accepts connections
 - [ ] Backend skeleton: FastAPI app, `config.py` (env-based settings),
       `GET /health` (pings DB) — verify `uvicorn` runs and reaches Postgres
 - [ ] DB models + Alembic migration for `User`, `Recipe`, `Ingredient`,
-      `Step`, `SavedRecipe` — verify `alembic upgrade head` applies cleanly
+      `Step`, `GlossaryTerm`, `RecipeInsight`, `SavedRecipe` (updated per the
+      glossary/insight-callouts rewrite in `docs/MVP.md`) — verify
+      `alembic upgrade head` applies cleanly, including a `GlossaryTerm` seed
+      fixture
 - [ ] Auth: register/login endpoints, password hashing, JWT issue/verify,
       `get_current_user` dependency — verify via Swagger UI (`/docs`) or `curl`
 - [ ] Anthropic wiring: `config.py` reads `ANTHROPIC_API_KEY`/`CLAUDE_MODEL`;
@@ -59,8 +64,6 @@ argues for a different choice:
   the intended shape, not existing files.
 - Update the checkboxes above as steps complete, and add rows to the open-
   decisions table if new tradeoffs surface during implementation.
-- `docker-compose.yml` and root/`frontend` `.env.example` files now exist,
-  but the "verify `docker compose up -d db` works" half of that checklist
-  item is still outstanding — the Docker CLI isn't installed in this dev
-  environment. Don't check that box until it's actually been run somewhere
-  Docker is available. See `SESSION_LOG.md` for session-by-session detail.
+- Docker Desktop is now installed and verified (`docker compose up -d db` +
+  `pg_isready` both succeed). See `SESSION_LOG.md` for session-by-session
+  detail.
