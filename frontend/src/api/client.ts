@@ -53,6 +53,10 @@ export function apiGet<T>(path: string): Promise<T> {
   return request<T>(path);
 }
 
+export function apiPost<T>(path: string): Promise<T> {
+  return request<T>(path, { method: "POST" });
+}
+
 export function apiPostJson<T>(path: string, body: unknown): Promise<T> {
   return request<T>(path, {
     method: "POST",

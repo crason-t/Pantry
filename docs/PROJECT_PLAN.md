@@ -4,14 +4,14 @@ A living status tracker for building out the MVP described in `docs/MVP.md`.
 Update this file as work completes or plans change — it's the "what's done,
 what's next" doc; `docs/MVP.md` stays the stable feature/architecture spec.
 
-## Status: Scaffolding
+## Status: First vertical slice working
 
-Repo has a README, `.gitignore`, `CLAUDE.md`, and the MVP spec. Docker
-Desktop, Postgres, the FastAPI backend skeleton, the full DB schema (via
-Alembic), JWT auth, the Anthropic client wrapper, the recipe ingestion
-pipeline, and a Vite+React+TS frontend with working register/login/logout
-and protected-route redirect are all verified working locally end-to-end
-(including in an actual browser). Next up: real ingest UI + persistence
+Full scaffolding (Docker, Postgres, backend, DB schema, auth, Anthropic
+wrapper, frontend shell) plus the first real vertical slice — ingest a
+recipe (URL or pasted text) → it's persisted and structured → view it →
+save it to the cookbook → see it listed — all verified end-to-end,
+including in an actual browser. Next up: the remaining recipe-assistant
+features (insights, substitutions, adaptation, scaling, guided cook mode)
 (the cookbook vertical slice).
 
 ## Build sequence
@@ -65,8 +65,16 @@ and protected-route redirect are all verified working locally end-to-end
       simpler to wire against the existing Authorization-header backend
       contract, but worth revisiting for XSS hardening later (see Open
       decisions table).
-- [ ] Cookbook list + ingest UI + recipe detail view — first real vertical
-      slice: ingest → view → save
+- [x] Cookbook list + ingest UI + recipe detail view — first real vertical
+      slice: ingest → view → save. Backend: `POST /recipes/ingest` now
+      persists (Recipe/Ingredient/Step rows) and returns a real id instead of
+      parse-and-return only; added `GET /recipes/{id}`, `POST
+      /recipes/{id}/save` (idempotent), `GET /recipes/cookbook`. Frontend:
+      real `IngestPage` (URL or paste-text), `RecipeDetailPage` (structured
+      view + Save to Cookbook), `CookbookPage` (saved-recipe list). Verified
+      via curl end-to-end (persist, fetch, idempotent save, cookbook list)
+      and in an actual browser (ingest → detail page with ingredients/steps →
+      save → shows up on /cookbook)
 - [ ] "Why this works" insight endpoint + UI panel
 - [ ] Ingredient substitution endpoint + UI
 - [ ] Equipment/method adaptation endpoint + UI
