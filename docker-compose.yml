@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pantry
+      POSTGRES_PASSWORD: pantry
+      POSTGRES_DB: pantry
+    ports:
+      - "5432:5432"
+    volumes:
+      - pantry_db_data:/var/lib/postgresql/data
+
+volumes:
+  pantry_db_data:

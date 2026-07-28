@@ -59,3 +59,8 @@ argues for a different choice:
   the intended shape, not existing files.
 - Update the checkboxes above as steps complete, and add rows to the open-
   decisions table if new tradeoffs surface during implementation.
+- `docker-compose.yml` and root/`frontend` `.env.example` files now exist,
+  but the "verify `docker compose up -d db` works" half of that checklist
+  item is still outstanding — the Docker CLI isn't installed in this dev
+  environment. Don't check that box until it's actually been run somewhere
+  Docker is available. See `SESSION_LOG.md` for session-by-session detail.
