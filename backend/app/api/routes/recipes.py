@@ -1,14 +1,20 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_current_user, get_db
 from app.models.recipe import Recipe
+from app.models.recipe_insight import RecipeInsight
 from app.models.saved_recipe import SavedRecipe
 from app.models.user import User
 from app.schemas.recipe import RecipeRead, RecipeSummary
 from app.services.ingestion.pipeline import ingest_from_text, ingest_from_url
-from app.services.recipes import persist_parsed_recipe
+from app.services.insights import generate_recipe_insights
+from app.services.recipes import persist_parsed_recipe, persist_recipe_insights
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/recipes", tags=["recipes"])
 
@@ -21,7 +27,11 @@ class IngestRequest(BaseModel):
 def _get_recipe_or_404(db: Session, recipe_id: int) -> Recipe:
     recipe = (
         db.query(Recipe)
-        .options(selectinload(Recipe.ingredients), selectinload(Recipe.steps))
+        .options(
+            selectinload(Recipe.ingredients),
+            selectinload(Recipe.steps),
+            selectinload(Recipe.insights).selectinload(RecipeInsight.glossary_term),
+        )
         .filter(Recipe.id == recipe_id)
         .first()
     )
@@ -44,6 +54,16 @@ def ingest_recipe(
         recipe = persist_parsed_recipe(db, parsed, current_user.id, raw_source_text=payload.text)
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Provide either url or text")
+
+    try:
+        generated = generate_recipe_insights(db, recipe)
+        persist_recipe_insights(db, recipe, generated)
+    except Exception:
+        # Best-effort: insight generation is a nice-to-have. A Claude/parsing
+        # failure here shouldn't fail the whole ingestion -- the recipe is
+        # already persisted and usable without its insights.
+        logger.exception("Insight generation failed for recipe %s", recipe.id)
+
     return _get_recipe_or_404(db, recipe.id)
 
 
