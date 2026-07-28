@@ -8,9 +8,11 @@ what's next" doc; `docs/MVP.md` stays the stable feature/architecture spec.
 
 Repo has a README, `.gitignore`, `CLAUDE.md`, and the MVP spec. Docker
 Desktop, Postgres, the FastAPI backend skeleton, the full DB schema (via
-Alembic), JWT auth (register/login/`/auth/me`), the Anthropic client
-wrapper, and the recipe ingestion pipeline (`POST /recipes/ingest`, no
-persistence yet) are all verified working locally. No frontend yet.
+Alembic), JWT auth, the Anthropic client wrapper, the recipe ingestion
+pipeline, and a Vite+React+TS frontend with working register/login/logout
+and protected-route redirect are all verified working locally end-to-end
+(including in an actual browser). Next up: real ingest UI + persistence
+(the cookbook vertical slice).
 
 ## Build sequence
 
@@ -45,9 +47,24 @@ persistence yet) are all verified working locally. No frontend yet.
       against a synthetic schema.org fixture, Claude extraction against
       pasted text, and the full authed route end-to-end (401 without auth,
       400 with neither `url` nor `text`, correct structured JSON otherwise)
-- [ ] Frontend skeleton: Vite + React + TS scaffold, router shell,
-      `api/client.ts`, login/register pages wired end-to-end against the
-      backend auth endpoints
+- [x] Frontend skeleton: Vite + React + TS scaffold, router shell,
+      `api/client.ts`, `AuthContext` (token in localStorage, matching the
+      backend's bearer-token contract), login/register pages, protected-route
+      redirect. Verified end-to-end in an actual browser: register → login →
+      logout → protected-route redirect all work.
+      Fixed along the way: the backend had no CORS middleware at all, so the
+      browser's preflight `OPTIONS /auth/register` 405'd and registration
+      failed with a generic network error — added `CORSMiddleware` allowing
+      `http://localhost:5173` (revisit the allow-list once there's a real
+      deployment target).
+      Note: React Router 7.18.1 has an npm-audit-flagged high-severity
+      advisory, but it's RSC-mode-specific (CSRF bypass in server actions) —
+      inapplicable to this plain client-side SPA, so left as-is rather than
+      downgrading.
+      Open decision: JWT lives in `localStorage`, not an httpOnly cookie —
+      simpler to wire against the existing Authorization-header backend
+      contract, but worth revisiting for XSS hardening later (see Open
+      decisions table).
 - [ ] Cookbook list + ingest UI + recipe detail view — first real vertical
       slice: ingest → view → save
 - [ ] "Why this works" insight endpoint + UI panel
@@ -69,6 +86,7 @@ argues for a different choice:
 | Auth | Rolled JWT | Mobile app arrives sooner than expected and a hosted provider's RN SDK saves real time |
 | Frontend framework | Vite SPA | SEO/public pages become a requirement |
 | Serving-scale logic | Hybrid: math for linear quantities, LLM pass for non-linear items (leavening, spice, time) | Pure math turns out sufficient in practice — simpler, can drop the LLM call |
+| JWT storage | `localStorage` | XSS exposure becomes a real concern before mobile arrives — would mean adding cookie-based auth (httpOnly, CORS `credentials`) instead of the Authorization-header contract |
 
 ## Notes
 
