@@ -33,4 +33,10 @@ npm run dev   # http://localhost:5180
 Ports (chosen to never collide with Pantry's own dev servers on 8000/5173):
 - Backend: `8010`
 - Frontend: `5180`
-- Postgres: `5433` (host) → `5432` (container)
+- Postgres: `5434` (host) → `5432` (container)
+
+The Compose project is explicitly named `pantry-standalone-ticket-tracker`
+in `docker-compose.yml` — don't remove that `name:` field. Without it,
+Compose defaults to this directory's basename (`ticket-tracker`), which
+collides with any other worktree/checkout that happens to share the same
+directory name.

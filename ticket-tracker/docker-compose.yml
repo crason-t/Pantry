@@ -1,3 +1,9 @@
+# Explicit project name: this directory's basename ("ticket-tracker") isn't
+# unique across worktrees, and Compose defaults the project name (and thus
+# container/network names) to the directory basename -- without this, two
+# worktrees both named "ticket-tracker" collide on the same container name.
+name: pantry-standalone-ticket-tracker
+
 services:
   db:
     image: postgres:16-alpine
@@ -7,7 +13,7 @@ services:
       POSTGRES_PASSWORD: tickets
       POSTGRES_DB: tickets
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
       - ticket_tracker_db_data:/var/lib/postgresql/data
 
