@@ -148,7 +148,7 @@ export function RecipeDetailPage() {
         ))}
       </div>
 
-      {stepView === "cards" && stepTipsSummary.length > 0 && (
+      {stepTipsSummary.length > 0 && (
         <div className="step-tips-summary">
           <h3>Keys of the recipe</h3>
           <ul className="step-tips-list">
