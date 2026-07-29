@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { Layout } from "./Layout";
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -11,5 +12,5 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   if (!user) {
     return <Navigate to="/login" replace />;
   }
-  return <>{children}</>;
+  return <Layout>{children}</Layout>;
 }

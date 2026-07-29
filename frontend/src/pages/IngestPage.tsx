@@ -29,7 +29,7 @@ export function IngestPage() {
   return (
     <div>
       <h1>Ingest a recipe</h1>
-      <div role="radiogroup" aria-label="Ingest source">
+      <div className="mode-toggle" role="radiogroup" aria-label="Ingest source">
         <label>
           <input
             type="radio"
@@ -71,7 +71,7 @@ export function IngestPage() {
           </label>
         )}
         {error && <p role="alert">{error}</p>}
-        <button type="submit" disabled={isSubmitting}>
+        <button type="submit" className="btn-primary" disabled={isSubmitting}>
           {isSubmitting ? "Ingesting..." : "Ingest recipe"}
         </button>
       </form>

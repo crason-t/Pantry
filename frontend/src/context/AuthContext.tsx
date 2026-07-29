@@ -5,8 +5,8 @@ import type { Token, User } from "../api/types";
 interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  login: (identifier: string, password: string) => Promise<void>;
+  register: (email: string, username: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -27,16 +27,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setIsLoading(false));
   }, []);
 
-  async function login(email: string, password: string) {
-    const body = new URLSearchParams({ username: email, password });
+  async function login(identifier: string, password: string) {
+    const body = new URLSearchParams({ username: identifier, password });
     const token = await apiPostForm<Token>("/auth/login", body);
     setToken(token.access_token);
     const me = await apiGet<User>("/auth/me");
     setUser(me);
   }
 
-  async function register(email: string, password: string) {
-    await apiPostJson<User>("/auth/register", { email, password });
+  async function register(email: string, username: string, password: string) {
+    await apiPostJson<User>("/auth/register", { email, username, password });
     await login(email, password);
   }
 

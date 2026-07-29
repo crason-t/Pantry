@@ -7,6 +7,7 @@ export function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -16,7 +17,7 @@ export function RegisterPage() {
     setError(null);
     setIsSubmitting(true);
     try {
-      await register(email, password);
+      await register(email, username, password);
       navigate("/cookbook");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
@@ -39,6 +40,15 @@ export function RegisterPage() {
           />
         </label>
         <label>
+          Username
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+        </label>
+        <label>
           Password
           <input
             type="password"
@@ -49,7 +59,7 @@ export function RegisterPage() {
           />
         </label>
         {error && <p role="alert">{error}</p>}
-        <button type="submit" disabled={isSubmitting}>
+        <button type="submit" className="btn-primary" disabled={isSubmitting}>
           {isSubmitting ? "Creating account..." : "Register"}
         </button>
       </form>

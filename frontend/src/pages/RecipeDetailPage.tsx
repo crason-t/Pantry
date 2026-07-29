@@ -98,11 +98,13 @@ export function RecipeDetailPage() {
         <p>Equipment: {recipe.equipment.join(", ")}</p>
       )}
 
-      <button type="button" onClick={handleSave} disabled={saveState !== "idle"}>
+      <button type="button" className="btn-primary" onClick={handleSave} disabled={saveState !== "idle"}>
         {saveState === "saved" ? "Saved to cookbook" : saveState === "saving" ? "Saving..." : "Save to cookbook"}
       </button>
       <p>
-        <Link to={`/recipes/${recipe.id}/cook`}>Start cooking</Link>
+        <Link to={`/recipes/${recipe.id}/cook`} className="btn-secondary">
+          Start cooking
+        </Link>
       </p>
 
       {recipe.tips.length > 0 && (

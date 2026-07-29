@@ -2,10 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ApiError, apiGet } from "../api/client";
 import type { RecipeSummary } from "../api/types";
-import { useAuth } from "../context/AuthContext";
 
 export function CookbookPage() {
-  const { user, logout } = useAuth();
   const [recipes, setRecipes] = useState<RecipeSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,13 +16,6 @@ export function CookbookPage() {
   return (
     <div>
       <h1>Cookbook</h1>
-      <p>Logged in as {user?.email}</p>
-      <button type="button" onClick={logout}>
-        Log out
-      </button>
-      <p>
-        <Link to="/recipes/new">Ingest a recipe</Link>
-      </p>
 
       {error && <p role="alert">{error}</p>}
       {recipes === null && !error && <p>Loading...</p>}

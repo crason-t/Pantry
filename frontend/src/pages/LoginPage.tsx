@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -16,7 +16,7 @@ export function LoginPage() {
     setError(null);
     setIsSubmitting(true);
     try {
-      await login(email, password);
+      await login(identifier, password);
       navigate("/cookbook");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
@@ -30,11 +30,11 @@ export function LoginPage() {
       <h1>Log in</h1>
       <form onSubmit={handleSubmit}>
         <label>
-          Email
+          Email or username
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
             required
           />
         </label>
@@ -48,7 +48,7 @@ export function LoginPage() {
           />
         </label>
         {error && <p role="alert">{error}</p>}
-        <button type="submit" disabled={isSubmitting}>
+        <button type="submit" className="btn-primary" disabled={isSubmitting}>
           {isSubmitting ? "Logging in..." : "Log in"}
         </button>
       </form>
