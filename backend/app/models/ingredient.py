@@ -12,7 +12,9 @@ class Ingredient(Base):
     position: Mapped[int] = mapped_column(Integer)
     quantity: Mapped[str | None] = mapped_column(String(50), nullable=True)
     unit: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    colloquial_quantity: Mapped[str | None] = mapped_column(String(100), nullable=True)
     name: Mapped[str] = mapped_column(String(255))
+    component: Mapped[str | None] = mapped_column(String(255), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     raw_text: Mapped[str] = mapped_column(Text)
 

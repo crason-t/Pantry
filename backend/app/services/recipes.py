@@ -37,9 +37,11 @@ def persist_parsed_recipe(
                 position=position,
                 quantity=ingredient.quantity,
                 unit=ingredient.unit,
+                colloquial_quantity=ingredient.colloquial_quantity,
                 name=ingredient.name,
                 notes=ingredient.notes,
                 raw_text=ingredient.raw_text,
+                component=ingredient.component,
             )
         )
 

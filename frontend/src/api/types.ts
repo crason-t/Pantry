@@ -14,9 +14,11 @@ export interface Ingredient {
   position: number;
   quantity: string | null;
   unit: string | null;
+  colloquial_quantity: string | null;
   name: string;
   notes: string | null;
   raw_text: string;
+  component: string | null;
 }
 
 export interface RecipeStep {

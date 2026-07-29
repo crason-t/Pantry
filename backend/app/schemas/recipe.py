@@ -8,9 +8,11 @@ from app.schemas.insight import RecipeInsightRead
 class ParsedIngredient(BaseModel):
     quantity: str | None = None
     unit: str | None = None
+    colloquial_quantity: str | None = None
     name: str
     notes: str | None = None
     raw_text: str
+    component: str | None = None
 
 
 class ParsedStep(BaseModel):
@@ -38,9 +40,11 @@ class IngredientRead(BaseModel):
     position: int
     quantity: str | None
     unit: str | None
+    colloquial_quantity: str | None
     name: str
     notes: str | None
     raw_text: str
+    component: str | None
 
 
 class StepRead(BaseModel):
