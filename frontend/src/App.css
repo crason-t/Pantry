@@ -136,12 +136,63 @@ label {
   font-size: 0.9rem;
 }
 
+.ingredients-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ingredient-edit-notice {
+  text-align: left;
+  font-size: 0.85rem;
+  opacity: 0.8;
+  margin: 0 0 12px;
+}
+
 .ingredient-list {
   text-align: left;
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 4px 20px;
   margin: 0 0 32px;
+}
+
+.ingredient-edit-list {
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin: 0 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ingredient-edit-row {
+  display: grid;
+  grid-template-columns: 80px 90px 1fr;
+  gap: 10px;
+}
+
+.ingredient-edit-row input {
+  padding: 8px 10px;
+}
+
+.ingredient-edit-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .ingredient-edit-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ingredient-edit-row .ingredient-edit-name {
+    grid-column: 1 / -1;
+  }
 }
 
 .ingredient-group + .ingredient-group {
