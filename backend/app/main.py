@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import auth, health, recipes
+from app.api.routes import auth, epics, health, recipes, tickets
 
 app = FastAPI(title="Pantry API")
 
@@ -17,3 +17,5 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(recipes.router)
+app.include_router(epics.router)
+app.include_router(tickets.router)

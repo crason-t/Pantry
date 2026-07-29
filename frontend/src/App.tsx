@@ -3,10 +3,13 @@ import "./App.css";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { CookbookPage } from "./pages/CookbookPage";
 import { CookModePage } from "./pages/CookModePage";
+import { EpicsPage } from "./pages/EpicsPage";
 import { IngestPage } from "./pages/IngestPage";
 import { LoginPage } from "./pages/LoginPage";
 import { RecipeDetailPage } from "./pages/RecipeDetailPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { TicketDetailPage } from "./pages/TicketDetailPage";
+import { TicketsPage } from "./pages/TicketsPage";
 
 function App() {
   return (
@@ -43,6 +46,30 @@ function App() {
         element={
           <ProtectedRoute>
             <CookModePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tickets"
+        element={
+          <ProtectedRoute>
+            <TicketsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tickets/:id"
+        element={
+          <ProtectedRoute>
+            <TicketDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/epics"
+        element={
+          <ProtectedRoute>
+            <EpicsPage />
           </ProtectedRoute>
         }
       />

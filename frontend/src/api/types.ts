@@ -76,3 +76,61 @@ export interface RecipeSummary {
   total_time: string | null;
   saved_at: string;
 }
+
+export type TicketStatus = "backlog" | "todo" | "in_progress" | "in_review" | "done";
+export type TicketPriority = "low" | "medium" | "high" | "urgent";
+
+export interface UserSummary {
+  id: number;
+  username: string;
+}
+
+export interface Epic {
+  id: number;
+  title: string;
+  description: string | null;
+  color: string;
+  created_at: string;
+}
+
+export interface EpicProgress extends Epic {
+  ticket_count: number;
+  done_count: number;
+}
+
+export interface TicketSummary {
+  id: number;
+  key: string;
+  title: string;
+  status: TicketStatus;
+  priority: TicketPriority;
+  labels: string[];
+  position: number;
+  epic_id: number | null;
+  assignee: UserSummary | null;
+  updated_at: string;
+}
+
+export interface TicketComment {
+  id: number;
+  body: string;
+  created_at: string;
+  author: UserSummary;
+}
+
+export interface TicketActivity {
+  id: number;
+  field: string;
+  old_value: string | null;
+  new_value: string | null;
+  created_at: string;
+  user: UserSummary;
+}
+
+export interface Ticket extends TicketSummary {
+  description: string | null;
+  reporter: UserSummary;
+  created_at: string;
+  comments: TicketComment[];
+  activity: TicketActivity[];
+}

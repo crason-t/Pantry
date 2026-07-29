@@ -18,6 +18,18 @@ export function Layout({ children }: { children: ReactNode }) {
           >
             Cookbook
           </NavLink>
+          <NavLink
+            to="/tickets"
+            className={({ isActive }) => (isActive ? "app-nav-link active" : "app-nav-link")}
+          >
+            Tickets
+          </NavLink>
+          <NavLink
+            to="/epics"
+            className={({ isActive }) => (isActive ? "app-nav-link active" : "app-nav-link")}
+          >
+            Epics
+          </NavLink>
         </nav>
         <div className="app-nav-actions">
           <Link to="/recipes/new" className="btn-primary">
