@@ -32,7 +32,29 @@ Two ingestion paths converge on one internal `ParsedRecipe` schema before persis
 
 `User`, `Recipe` (with child `Ingredient` and `Step` rows, not JSON blobs, so scaling/display logic can operate on typed data), and `SavedRecipe` as the cookbook join table. Substitutions and adaptations are computed on demand via Claude, not persisted, for MVP. Full field list in `docs/MVP.md`.
 
+## Ticket discipline
+
+Remaining MVP work is tracked as GitHub Milestones (one per feature area) with
+one Issue per milestone, in the [Pantry](https://github.com/crason-t/Pantry)
+repo. `docs/PROJECT_PLAN.md` stays the narrative build-sequence checklist —
+the milestones/issues are the enforceable version of the same plan, not a
+replacement for it.
+
+- A **commit-msg hook** (`.githooks/commit-msg`, wired via
+  `git config core.hooksPath .githooks`) rejects any commit whose message
+  doesn't reference an issue number (`#3`). Reference the issue you're
+  closing or advancing in every commit message.
+- When a milestone is closed, `.github/workflows/milestone-release.yml`
+  automatically tags the default branch and cuts a GitHub Release listing
+  everything that shipped in it.
+- `.github/workflows/require-milestone.yml` comments on any new issue that
+  isn't assigned to a milestone yet, as a reminder to fix it.
+- If a piece of work genuinely doesn't fit an existing milestone, open a new
+  issue under the right milestone (or propose a new one) before writing the
+  code — don't let untracked work happen because no ticket existed yet.
+
 ## Where to look first
 
 - `docs/MVP.md` — feature spec, explicit non-goals, architecture decision log, data model, ingestion architecture. This is the source of truth for scope and design decisions.
+- `docs/PROJECT_PLAN.md` — build-sequence checklist and open-decisions table; cross-references the GitHub issues above for remaining work.
 - `README.md` — one-paragraph project summary and current status.

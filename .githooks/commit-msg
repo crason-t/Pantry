@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Enforces the "every code change is a ticket" rule from CLAUDE.md.
+# Reject commits whose message doesn't reference a GitHub issue (e.g. "#3").
+# Merge commits and revert commits are exempt — they don't represent new work.
+set -euo pipefail
+
+MSG_FILE="$1"
+MSG="$(cat "$MSG_FILE")"
+
+if [[ "$MSG" == Merge* ]] || [[ "$MSG" == Revert* ]]; then
+  exit 0
+fi
+
+if ! grep -qE '#[0-9]+' "$MSG_FILE"; then
+  echo "error: commit message must reference an issue number, e.g. 'Add serving-scale math (#3)'." >&2
+  echo "Every code change should be tied to a ticket that belongs to a milestone." >&2
+  echo "See CLAUDE.md — Ticket discipline. To bypass in a genuine one-off, use 'git commit --no-verify'." >&2
+  exit 1
+fi

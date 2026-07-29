@@ -1,0 +1,24 @@
+name: Require milestone on new tickets
+
+# CLAUDE.md requires every ticket to belong to a milestone. GitHub has no
+# server-side way to require a milestone at issue-creation time, so this
+# posts a visible reminder comment instead of failing silently.
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  issues: write
+
+jobs:
+  check-milestone:
+    runs-on: ubuntu-latest
+    if: github.event.issue.milestone == null
+    steps:
+      - name: Remind to assign a milestone
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment "${{ github.event.issue.number }}" \
+            --repo "${{ github.repository }}" \
+            --body "This ticket has no milestone assigned. Per CLAUDE.md, every ticket should belong to a milestone before it's worked on."

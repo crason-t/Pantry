@@ -1,0 +1,52 @@
+name: Cut release on milestone completion
+
+# When every issue in a milestone is closed and the milestone itself is
+# closed, tag the current default branch and publish a Release listing the
+# issues that shipped in it.
+on:
+  milestone:
+    types: [closed]
+
+permissions:
+  contents: write
+  issues: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build release notes and tag
+        id: notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MILESTONE_TITLE: ${{ github.event.milestone.title }}
+        run: |
+          set -euo pipefail
+          SLUG=$(echo "$MILESTONE_TITLE" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' | sed 's/-\+/-/g; s/^-//; s/-$//')
+          TAG="milestone-${SLUG}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+          echo "## ${MILESTONE_TITLE}" > notes.md
+          echo "" >> notes.md
+          echo "Closed issues in this milestone:" >> notes.md
+          echo "" >> notes.md
+          gh issue list --repo "${{ github.repository }}" \
+            --milestone "$MILESTONE_TITLE" --state closed \
+            --json number,title \
+            --jq '.[] | "- #\(.number) \(.title)"' >> notes.md
+
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ steps.notes.outputs.tag }}" \
+            --repo "${{ github.repository }}" \
+            --title "${{ github.event.milestone.title }}" \
+            --notes-file notes.md

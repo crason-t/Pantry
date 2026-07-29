@@ -88,12 +88,12 @@ features (insights, substitutions, adaptation, scaling, guided cook mode)
       "Why this dish works" panel above the ingredients list — not a raw
       data dump. Verified via curl (seared steak + pan sauce: 6 accurate,
       correctly-anchored insights) and in an actual browser end-to-end.
-- [ ] Ingredient substitution endpoint + UI
-- [ ] Equipment/method adaptation endpoint + UI
-- [ ] Serving-scale endpoint + UI
+- [ ] Ingredient substitution endpoint + UI ([#1](https://github.com/crason-t/Pantry/issues/1))
+- [ ] Equipment/method adaptation endpoint + UI ([#2](https://github.com/crason-t/Pantry/issues/2))
+- [ ] Serving-scale endpoint + UI ([#3](https://github.com/crason-t/Pantry/issues/3))
 - [ ] Guided step-by-step cook-mode UI (purely frontend, consumes steps
-      already returned by the recipe-detail endpoint)
-- [ ] Polish: error handling, loading states, minimal styling pass
+      already returned by the recipe-detail endpoint) ([#4](https://github.com/crason-t/Pantry/issues/4))
+- [ ] Polish: error handling, loading states, minimal styling pass ([#5](https://github.com/crason-t/Pantry/issues/5))
 
 ## Open decisions to revisit
 
