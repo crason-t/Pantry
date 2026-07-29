@@ -12,7 +12,7 @@ from app.models.user import User
 from app.schemas.recipe import RecipeRead, RecipeSummary
 from app.services.ingestion.pipeline import ingest_from_text, ingest_from_url
 from app.services.insights import generate_recipe_insights
-from app.services.recipes import persist_parsed_recipe, persist_recipe_insights
+from app.services.recipes import persist_parsed_recipe, persist_generated_recipe_content
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +31,7 @@ def _get_recipe_or_404(db: Session, recipe_id: int) -> Recipe:
             selectinload(Recipe.ingredients),
             selectinload(Recipe.steps),
             selectinload(Recipe.insights).selectinload(RecipeInsight.glossary_term),
+            selectinload(Recipe.tips),
         )
         .filter(Recipe.id == recipe_id)
         .first()
@@ -57,7 +58,7 @@ def ingest_recipe(
 
     try:
         generated = generate_recipe_insights(db, recipe)
-        persist_recipe_insights(db, recipe, generated)
+        persist_generated_recipe_content(db, recipe, generated)
     except Exception:
         # Best-effort: insight generation is a nice-to-have. A Claude/parsing
         # failure here shouldn't fail the whole ingestion -- the recipe is

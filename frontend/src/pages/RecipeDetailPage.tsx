@@ -3,13 +3,19 @@ import { Link, useParams } from "react-router-dom";
 import { ApiError, apiGet, apiPost } from "../api/client";
 import type { Ingredient, Recipe } from "../api/types";
 import { InsightCallout } from "../components/InsightCallout";
+import { InsightCard } from "../components/InsightCard";
 import { InsightTag } from "../components/InsightTag";
+import { StepCard } from "../components/StepCard";
+import { CATEGORY_LABEL } from "../components/insightCategory";
+
+type StepView = "list" | "cards";
 
 export function RecipeDetailPage() {
   const { id } = useParams();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
+  const [stepView, setStepView] = useState<StepView>("list");
 
   useEffect(() => {
     apiGet<Recipe>(`/recipes/${id}`)
@@ -55,6 +61,13 @@ export function RecipeDetailPage() {
   }, [recipe]);
   const showGroupHeaders = ingredientGroups.length > 1 || ingredientGroups[0]?.component != null;
 
+  const stepTipsSummary = useMemo(() => {
+    const steps = recipe?.steps ?? [];
+    return steps.flatMap((step, index) =>
+      (insightsByStepId.get(step.id) ?? []).map((insight) => ({ stepNumber: index + 1, insight })),
+    );
+  }, [recipe, insightsByStepId]);
+
   async function handleSave() {
     setSaveState("saving");
     try {
@@ -92,12 +105,28 @@ export function RecipeDetailPage() {
         <Link to={`/recipes/${recipe.id}/cook`}>Start cooking</Link>
       </p>
 
+      {recipe.tips.length > 0 && (
+        <section aria-label="Tips">
+          <h2>Tips</h2>
+          <ul className="tips-list">
+            {recipe.tips.map((tip) => (
+              <li className="tip-row" key={tip.id}>
+                <span className="tip-marker" aria-hidden="true">!</span>
+                <span className="tip-text">{tip.tip_text}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       {generalInsights.length > 0 && (
         <section aria-label="Why this dish works">
           <h2>Why this dish works</h2>
-          {generalInsights.map((insight) => (
-            <InsightCallout key={insight.id} insight={insight} />
-          ))}
+          <div className="insight-card-grid">
+            {generalInsights.map((insight) => (
+              <InsightCard key={insight.id} insight={insight} />
+            ))}
+          </div>
         </section>
       )}
 
@@ -119,20 +148,77 @@ export function RecipeDetailPage() {
         ))}
       </div>
 
-      <h2>Steps</h2>
-      <ol className="step-list">
-        {recipe.steps.map((step, index) => (
-          <li className="step-row" key={step.id}>
-            <span className="step-number">{index + 1}</span>
-            <div className="step-body">
-              <p className="step-instruction">{step.instruction}</p>
-              {(insightsByStepId.get(step.id) ?? []).map((insight) => (
-                <InsightCallout key={insight.id} insight={insight} />
-              ))}
-            </div>
-          </li>
-        ))}
-      </ol>
+      {stepView === "cards" && stepTipsSummary.length > 0 && (
+        <div className="step-tips-summary">
+          <h3>Keys of the recipe</h3>
+          <ul className="step-tips-list">
+            {stepTipsSummary.map(({ stepNumber, insight }) => (
+              <li className="step-tip-row" key={insight.id}>
+                <span className="step-tip-number">{stepNumber}</span>
+                <div className="step-tip-body">
+                  <span className="insight-badge">
+                    {CATEGORY_LABEL[insight.glossary_term.category] ?? insight.glossary_term.category}
+                    {" · "}
+                    {insight.glossary_term.name}
+                  </span>
+                  {insight.note && <p className="insight-note">{insight.note}</p>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="steps-header">
+        <h2>Steps</h2>
+        <div className="view-toggle" role="tablist" aria-label="Steps view">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={stepView === "list"}
+            className={stepView === "list" ? "active" : ""}
+            onClick={() => setStepView("list")}
+          >
+            List
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={stepView === "cards"}
+            className={stepView === "cards" ? "active" : ""}
+            onClick={() => setStepView("cards")}
+          >
+            Cards
+          </button>
+        </div>
+      </div>
+
+      {stepView === "list" ? (
+        <ol className="step-list">
+          {recipe.steps.map((step, index) => (
+            <li className="step-row" key={step.id}>
+              <span className="step-number">{index + 1}</span>
+              <div className="step-body">
+                <p className="step-instruction">{step.instruction}</p>
+                {(insightsByStepId.get(step.id) ?? []).map((insight) => (
+                  <InsightCallout key={insight.id} insight={insight} />
+                ))}
+              </div>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <div className="step-card-grid">
+          {recipe.steps.map((step, index) => (
+            <StepCard
+              key={step.id}
+              index={index}
+              instruction={step.instruction}
+              insights={insightsByStepId.get(step.id) ?? []}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

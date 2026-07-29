@@ -22,6 +22,7 @@ class GeneratedInsight(BaseModel):
 
 class GeneratedInsights(BaseModel):
     insights: list[GeneratedInsight]
+    tips: list[str] = []
 
 
 class GlossaryTermRead(BaseModel):
@@ -42,3 +43,11 @@ class RecipeInsightRead(BaseModel):
     step_id: int | None
     ingredient_id: int | None
     position: int
+
+
+class RecipeTipRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    position: int
+    tip_text: str

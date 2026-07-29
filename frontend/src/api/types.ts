@@ -45,6 +45,12 @@ export interface RecipeInsight {
   position: number;
 }
 
+export interface RecipeTip {
+  id: number;
+  position: number;
+  tip_text: string;
+}
+
 export interface Recipe {
   id: number;
   title: string;
@@ -59,6 +65,7 @@ export interface Recipe {
   ingredients: Ingredient[];
   steps: RecipeStep[];
   insights: RecipeInsight[];
+  tips: RecipeTip[];
 }
 
 export interface RecipeSummary {

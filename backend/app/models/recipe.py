@@ -31,3 +31,6 @@ class Recipe(Base):
     insights: Mapped[list["RecipeInsight"]] = relationship(
         back_populates="recipe", order_by="RecipeInsight.position", cascade="all, delete-orphan"
     )
+    tips: Mapped[list["RecipeTip"]] = relationship(
+        back_populates="recipe", order_by="RecipeTip.position", cascade="all, delete-orphan"
+    )

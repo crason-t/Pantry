@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from app.schemas.insight import RecipeInsightRead
+from app.schemas.insight import RecipeInsightRead, RecipeTipRead
 
 
 class ParsedIngredient(BaseModel):
@@ -71,6 +71,7 @@ class RecipeRead(BaseModel):
     ingredients: list[IngredientRead]
     steps: list[StepRead]
     insights: list[RecipeInsightRead]
+    tips: list[RecipeTipRead]
 
 
 class RecipeSummary(BaseModel):

@@ -4,6 +4,7 @@ from app.models.glossary_term import GlossaryTerm
 from app.models.ingredient import Ingredient
 from app.models.recipe import Recipe
 from app.models.recipe_insight import RecipeInsight
+from app.models.recipe_tip import RecipeTip
 from app.models.step import Step
 from app.schemas.insight import GeneratedInsights
 from app.schemas.recipe import ParsedRecipe
@@ -53,12 +54,13 @@ def persist_parsed_recipe(
     return recipe
 
 
-def persist_recipe_insights(db: Session, recipe: Recipe, generated: GeneratedInsights) -> None:
+def persist_generated_recipe_content(db: Session, recipe: Recipe, generated: GeneratedInsights) -> None:
     """Resolve Claude's generated insights against real glossary term rows
-    and the recipe's own step/ingredient rows, then persist. Silently skips
-    any insight tagging a glossary_term_slug that doesn't exist, or an
-    anchor index out of range -- Claude's structured output is trusted for
-    shape but not for referential correctness."""
+    and the recipe's own step/ingredient rows, then persist those plus the
+    generated tips. Silently skips any insight tagging a glossary_term_slug
+    that doesn't exist, or an anchor index out of range -- Claude's
+    structured output is trusted for shape but not for referential
+    correctness."""
     glossary_terms_by_slug = {t.slug: t for t in db.query(GlossaryTerm).all()}
 
     for position, insight in enumerate(generated.insights):
@@ -85,4 +87,8 @@ def persist_recipe_insights(db: Session, recipe: Recipe, generated: GeneratedIns
                 position=position,
             )
         )
+
+    for position, tip_text in enumerate(generated.tips):
+        db.add(RecipeTip(recipe_id=recipe.id, position=position, tip_text=tip_text))
+
     db.commit()
