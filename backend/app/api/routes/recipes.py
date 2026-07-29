@@ -10,9 +10,11 @@ from app.models.recipe_insight import RecipeInsight
 from app.models.saved_recipe import SavedRecipe
 from app.models.user import User
 from app.schemas.recipe import RecipeRead, RecipeSummary
+from app.schemas.substitution import SubstitutionSuggestions
 from app.services.ingestion.pipeline import ingest_from_text, ingest_from_url
 from app.services.insights import generate_recipe_insights
 from app.services.recipes import persist_parsed_recipe, persist_generated_recipe_content
+from app.services.substitutions import generate_ingredient_substitutions
 
 logger = logging.getLogger(__name__)
 
@@ -117,3 +119,32 @@ def save_recipe(
         return  # idempotent: already saved
     db.add(SavedRecipe(user_id=current_user.id, recipe_id=recipe_id))
     db.commit()
+
+
+@router.post(
+    "/{recipe_id}/ingredients/{ingredient_id}/substitutions",
+    response_model=SubstitutionSuggestions,
+)
+def get_ingredient_substitutions(
+    recipe_id: int,
+    ingredient_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> SubstitutionSuggestions:
+    recipe = _get_recipe_or_404(db, recipe_id)
+    ingredient = next((i for i in recipe.ingredients if i.id == ingredient_id), None)
+    if ingredient is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ingredient not found")
+
+    # On-demand only, never persisted (see docs/MVP.md) -- a Claude failure
+    # here should surface to the user, unlike best-effort ingestion insights.
+    try:
+        return generate_ingredient_substitutions(recipe, ingredient)
+    except Exception:
+        logger.exception(
+            "Substitution generation failed for recipe %s ingredient %s", recipe_id, ingredient_id
+        )
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Could not get substitution suggestions right now",
+        )

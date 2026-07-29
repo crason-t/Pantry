@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, apiGet, apiPost } from "../api/client";
-import type { Ingredient, Recipe } from "../api/types";
+import { fetchIngredientSubstitutions } from "../api/substitutions";
+import type { Ingredient, Recipe, SubstitutionSuggestion } from "../api/types";
 import { InsightCallout } from "../components/InsightCallout";
 import { InsightCard } from "../components/InsightCard";
 import { InsightTag } from "../components/InsightTag";
 import { StepCard } from "../components/StepCard";
+import { SubstitutionPanel, type SubstitutionPanelState } from "../components/SubstitutionPanel";
 import { CATEGORY_LABEL } from "../components/insightCategory";
 
 type StepView = "list" | "cards";
@@ -142,6 +144,7 @@ export function RecipeDetailPage() {
             {group.items.map((ingredient) => (
               <IngredientRow
                 key={ingredient.id}
+                recipeId={recipe.id}
                 ingredient={ingredient}
                 insights={insightsByIngredientId.get(ingredient.id) ?? []}
               />
@@ -226,28 +229,69 @@ export function RecipeDetailPage() {
 }
 
 function IngredientRow({
+  recipeId,
   ingredient,
   insights,
 }: {
+  recipeId: number;
   ingredient: Ingredient;
   insights: Recipe["insights"];
 }) {
+  const [subState, setSubState] = useState<SubstitutionPanelState | "closed">("closed");
+  const [suggestions, setSuggestions] = useState<SubstitutionSuggestion[]>([]);
+  const [subError, setSubError] = useState<string | null>(null);
+
+  async function handleToggleSubstitutions() {
+    if (subState === "open" || subState === "loading") {
+      setSubState("closed");
+      return;
+    }
+    setSubState("loading");
+    setSubError(null);
+    try {
+      const result = await fetchIngredientSubstitutions(recipeId, ingredient.id);
+      setSuggestions(result.suggestions);
+      setSubState("open");
+    } catch (err) {
+      setSubError(err instanceof ApiError ? err.message : "Could not load substitutions");
+      setSubState("error");
+    }
+  }
+
   const precise = [ingredient.quantity, ingredient.unit].filter(Boolean).join(" ");
   const primary = ingredient.colloquial_quantity || precise;
   const secondary = ingredient.colloquial_quantity ? precise : null;
   return (
-    <div className="ingredient-row">
-      <span className="ingredient-name">
-        {ingredient.raw_text}
-        {insights.map((insight) => (
-          <InsightTag key={insight.id} insight={insight} />
-        ))}
-      </span>
-      {primary && (
-        <span className="ingredient-qty-group">
-          <span className="ingredient-qty">{primary}</span>
-          {secondary && <span className="ingredient-qty-secondary">{secondary}</span>}
+    <div className="ingredient-row-wrap">
+      <div className="ingredient-row">
+        <span className="ingredient-name">
+          <button
+            type="button"
+            className="ingredient-name-btn"
+            onClick={handleToggleSubstitutions}
+            aria-expanded={subState === "open"}
+            aria-label={`Substitute suggestions for ${ingredient.name}`}
+          >
+            {ingredient.raw_text}
+          </button>
+          {insights.map((insight) => (
+            <InsightTag key={insight.id} insight={insight} />
+          ))}
         </span>
+        {primary && (
+          <span className="ingredient-qty-group">
+            <span className="ingredient-qty">{primary}</span>
+            {secondary && <span className="ingredient-qty-secondary">{secondary}</span>}
+          </span>
+        )}
+      </div>
+      {subState !== "closed" && (
+        <SubstitutionPanel
+          state={subState}
+          suggestions={suggestions}
+          error={subError}
+          onDismiss={() => setSubState("closed")}
+        />
       )}
     </div>
   );
