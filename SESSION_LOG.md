@@ -12,6 +12,13 @@ Here are the things you should run now:
 5. Finish creating the Jira replica for ticket tracking and make sure it's actually hooked up to the project structure.
 6. Create a skill to get the environment ready for development just by running a simple skill in the right directory. Should spin up things like a few localhost instances with reserved ports for development and testing. Let's also assign names to these and the browser tab name changes depending on the specific feature being tested. Like if a localhost instance is meant to test changes to the Recipe page, it should be called something descriptive like Recipe Rework Test. There should be a page dedicated to navigating between these localhost instances too
 
+Checked in after surfacing this list (2026-07-29, same session as the
+`f6bfb24` reconciliation): item 1 needs a screenshot Carson hasn't
+provided yet, and when asked which of 3/4/5 to start next he said "Done
+for now" — no next-task pick made. **Don't re-ask this on the very next
+session start; just wait for direction**, and note item 2 is already done
+(see `f6bfb24`).
+
 - Backend + frontend are fully scaffolded and working end-to-end (FastAPI +
   Postgres, Vite/React/TS SPA): auth, recipe ingestion (URL or pasted text,
   via Claude), "Keys of the recipe" / "Why this dish works" insights, recipe
@@ -183,13 +190,16 @@ Also still open from prior sessions:
   seeded glossary terms across all 3 categories (reaction/flavor/technique)
   in one recipe.
 
-**Next:** redesign the cookbook list as a card grid (Carson's next
-explicit ask); diagnose the ingredient-name/measurement ingestion bug once
-a screenshot is provided; add a 404 route; resume the remaining
-`docs/PROJECT_PLAN.md` build-sequence items (substitutions, adaptation,
-scaling, cook-mode UI, polish).
+**Next:** wait for Carson's direction — offered the cookbook redesign,
+design system, and Jira-lite UI as options and he said "Done for now"
+without picking one; don't re-prompt on the next session start.
 
-**Open questions / blockers:** none.
+**Open questions / blockers:** the ingredient-name/measurement ingestion
+bug (item 1) is still waiting on a screenshot from Carson.
+
+(Reconciliation commit `f6bfb24` also landed this same day, syncing this
+log and `docs/PROJECT_PLAN.md` with git/issue state that had drifted —
+see the "Current State" section above.)
 
 ### 2026-07-28
 **Did:**
