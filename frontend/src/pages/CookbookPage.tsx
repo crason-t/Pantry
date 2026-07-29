@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ApiError, apiGet } from "../api/client";
 import type { RecipeSummary } from "../api/types";
+import { RecipeCard } from "../components/RecipeCard";
 
 export function CookbookPage() {
   const [recipes, setRecipes] = useState<RecipeSummary[] | null>(null);
@@ -19,17 +20,21 @@ export function CookbookPage() {
 
       {error && <p role="alert">{error}</p>}
       {recipes === null && !error && <p>Loading...</p>}
-      {recipes !== null && recipes.length === 0 && <p>No saved recipes yet.</p>}
+      {recipes !== null && recipes.length === 0 && (
+        <div className="cookbook-empty">
+          <p>No saved recipes yet.</p>
+          <p className="cookbook-empty-hint">Ingest a recipe from a URL or pasted text to start your cookbook.</p>
+          <Link to="/recipes/new" className="btn-primary">
+            Add a recipe
+          </Link>
+        </div>
+      )}
       {recipes !== null && recipes.length > 0 && (
-        <ul>
+        <div className="recipe-card-grid">
           {recipes.map((recipe) => (
-            <li key={recipe.id}>
-              <Link to={`/recipes/${recipe.id}`}>{recipe.title}</Link>
-              {recipe.servings != null && ` — serves ${recipe.servings}`}
-              {recipe.total_time && ` — ${recipe.total_time}`}
-            </li>
+            <RecipeCard key={recipe.id} recipe={recipe} />
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
