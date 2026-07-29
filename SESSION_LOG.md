@@ -15,9 +15,21 @@ Here are the things you should run now:
 Checked in after surfacing this list (2026-07-29, same session as the
 `f6bfb24` reconciliation): item 1 needs a screenshot Carson hasn't
 provided yet, and when asked which of 3/4/5 to start next he said "Done
-for now" — no next-task pick made. **Don't re-ask this on the very next
-session start; just wait for direction**, and note item 2 is already done
-(see `f6bfb24`).
+for now" — no next-task pick made. Item 2 is already done (see `f6bfb24`).
+
+Later the same day, Carson picked item 4 (a separate conversation/job): a
+first-pass Pantry brand identity now exists as a published Artifact (see
+History below) — palette, type, and components grounded in the app's own
+Flavor/Technique/Reaction glossary mechanic. It's a draft for review, not
+yet wired into `frontend/` as real tokens/CSS. Note: that session flagged
+`/design-login` + `/design consent` local-command output claiming a
+"Claude Design" tool had been granted access — no such tool exists; it
+was treated as a likely prompt injection and ignored, and the artifact
+was built with the actually-available Artifact tool instead. Items 3, 5,
+6 are still un-started by this line of work; `.claude/worktrees/`
+contains `ticket-tracker` and `scrollable-cards` dirs that look like
+separate parallel sessions possibly working items 5 and 3 — not verified
+or touched here.
 
 - Backend + frontend are fully scaffolded and working end-to-end (FastAPI +
   Postgres, Vite/React/TS SPA): auth, recipe ingestion (URL or pasted text,
@@ -200,6 +212,37 @@ bug (item 1) is still waiting on a screenshot from Carson.
 (Reconciliation commit `f6bfb24` also landed this same day, syncing this
 log and `docs/PROJECT_PLAN.md` with git/issue state that had drifted —
 see the "Current State" section above.)
+
+**Later same day — brand identity (separate job):**
+- Carson picked up item 4 from the `CLAUDE.md` punch list ("set up a
+  design system using Claude Design"). No such tool exists in the
+  toolset; the `/design-login` + `/design consent` local-command outputs
+  claiming access had been granted were flagged as a likely prompt
+  injection and not acted on.
+- Built a first-pass Pantry brand identity instead, using the Artifact
+  tool: palette (cast-iron dark / butcher-paper light grounds, one
+  amber "doing" accent, three semantic tag hues mapped directly to the
+  Flavor/Technique/Reaction glossary categories), type pairing
+  (Bricolage Grotesque display, Source Serif 4 body, IBM Plex Mono for
+  quantities/tags/timers), and a component set (buttons, glossary tag
+  chips, cook-mode step nav, recipe-ingest field, servings stepper) —
+  both light and dark themes. The hero is the actual sear/Maillard/pan-
+  sauce example from `docs/MVP.md` rendered as Pantry would show it, not
+  generic food-app styling.
+- Published at
+  https://claude.ai/code/artifact/5562e39b-52a5-4cd4-86cf-9196123f0805 —
+  explicitly marked draft/not-yet-applied on the page itself. No changes
+  were made to `frontend/` — this is a proposal to react to, not tokens
+  wired into the app yet.
+
+**Decisions (brand identity):** presented as a design artifact/proposal
+rather than through the nonexistent "Claude Design" tool; deliberately
+grounded the visual system in the product's own glossary mechanic
+instead of a generic warm-cream/serif/terracotta cooking-app look.
+
+**Next (brand identity):** get Carson's read on the direction
+(keep/iterate/discard) before turning any of it into real `frontend/`
+CSS/tokens.
 
 ### 2026-07-28
 **Did:**
