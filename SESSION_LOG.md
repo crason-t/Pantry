@@ -141,14 +141,15 @@ direction.
   `.claude/worktrees/*`, not just the main checkout, since parallel-agent
   work regularly lands there. Issue #23, committed this session.
 - `.claude/worktrees/` holds other sessions' locked worktrees (currently
-  `quizzical-dazzling-leaf`, `scrollable-cards`, `ticket-tracker`) — left
-  untouched, not attributable to this session.
-- Update: the `ticket-tracker/` directory mentioned in an earlier version
-  of this note is no longer just sitting untracked in the main checkout —
-  it's now committed on branch `standalone-ticket-tracker`, pushed, and
-  open as draft PR #24 (see the History entry below for the full story,
-  including why it superseded PR #18 and two real collisions that came
-  from building it directly in the shared main checkout).
+  `quizzical-dazzling-leaf`, `scrollable-cards`) — left untouched, not
+  attributable to this session.
+- Resolved: the ticket tracker is a standalone app at `ticket-tracker/`
+  on branch `standalone-ticket-tracker`, pushed, open as
+  [PR #24](https://github.com/crason-t/Pantry/pull/24) (ready for
+  review, not draft) — the only ticket-tracker implementation left
+  anywhere in the repo. The old in-app version's PR (#18), worktree, git
+  branch, and a leftover Docker container were all removed. Full story,
+  including a close/reopen incident, in the History entry below.
 - Untracked, pre-existing, unrelated to this session: `get-docker.sh` (the
   official Docker install script, likely a leftover from setting up Docker
   Desktop) — probably safe to delete or `.gitignore`, but not touched.
@@ -182,8 +183,8 @@ session until acted on):
 4. Set up a design system using Claude Design (Figma).
 5. Finish the Jira-lite ticket-tracking UI and hook it up to the project
    structure — tracked as issue #17. **Done this session as a standalone
-   app, see PR #24 above; supersedes PR #18. Needs review/merge, and a
-   call on whether to close #18.**
+   app; Carson confirmed it's what he wants. PR #24 open and ready for
+   review/merge; PR #18 (the superseded in-app version) is closed.**
 6. Build a skill to spin up named local dev instances (reserved ports,
    descriptive browser-tab titles per feature under test) plus a page to
    navigate between them.
@@ -192,10 +193,12 @@ Also still open:
 - Review and merge PRs #9, #10, #11 (watch the #10/#11 rebase on
   `RecipeDetailPage.tsx`); tear down the ad hoc `:8001`/`:5175` servers
   once #11 is merged and no longer needed.
-- Review and merge PR #24 (standalone ticket tracker); decide whether to
-  close superseded PR #18. To run PR #24 locally: check out
-  `standalone-ticket-tracker` **in a worktree, not the main checkout** —
-  see the collision notes in this entry's "Did" section for why.
+- Review and merge PR #24 (standalone ticket tracker, ready for review).
+  To run it locally: check out `standalone-ticket-tracker` **in a
+  worktree** — it's currently at
+  `pantry-worktrees/standalone-ticket-tracker` — **not the main
+  checkout**, see the collision notes in this entry's "Did" section for
+  why.
 - Add a 404/catch-all route with a real "page not found" message.
 - Continue `docs/PROJECT_PLAN.md`'s remaining build-sequence items:
   adaptation endpoint+UI, serving-scale endpoint+UI, guided cook-mode UI,
@@ -326,6 +329,40 @@ Also still open:
   concurrent sessions' work in this same log already does. The main
   checkout should be treated as shared/transient, not a safe place to run
   a long-lived local server from.
+- **PR #24 got closed out from under this session.** Sometime after the
+  above, PR #24 was closed and its branch deleted, with a comment posted
+  under Carson's GitHub account: *"Duplicate effort — closing in favor of
+  #18, which builds the ticket tracker as pages inside the existing
+  Pantry app... two sessions ended up on the same task."* That reasoning
+  directly contradicts what Carson told this session explicitly (the
+  tracker must be standalone) — almost certainly another concurrent
+  session acting under his `gh` credentials without this conversation's
+  context, not Carson himself. Nothing was actually lost: recovered the
+  branch from `git reflog` (commits were still present, just unreferenced)
+  and rebuilt it as a proper worktree at
+  `pantry-worktrees/standalone-ticket-tracker` this time, instead of the
+  main checkout. Booted it there (own Postgres on `:5434`, backend
+  `:8010`, frontend `:5180`) so Carson could look at it again.
+- **Carson confirmed directly: the standalone version is what he wants
+  implemented.** Resolved the conflict decisively:
+  - Re-pushed `standalone-ticket-tracker`, reopened
+    [PR #24](https://github.com/crason-t/Pantry/pull/24), marked it ready
+    for review (was draft), and commented explaining the reopen.
+  - Closed [PR #18](https://github.com/crason-t/Pantry/pull/18) (the
+    in-app version) as the actual superseded duplicate, with a comment
+    pointing to #24.
+  - Deleted the now-dead `worktree-ticket-tracker` remote branch (its
+    local worktree at `.claude/worktrees/ticket-tracker` had already
+    vanished on its own, along with its git branch ref, by the time this
+    session checked).
+  - Found and removed a leftover Docker container/volume from that old
+    implementation (`ticket-tracker-db-1` on port 5433, a `pantry_db_data`
+    volume — unrelated to Pantry's real DB despite the name) and killed
+    its orphaned `uvicorn` process on port `8123`.
+  - Confirmed `master` never had any of the in-app ticket-tracker code
+    merged into it, so there was nothing to revert there.
+  PR #24 is the only ticket-tracker implementation left anywhere in the
+  repo now, open and ready to merge whenever Carson wants.
 
 **Decisions:**
 - Dropped auth entirely for the ticket tracker rather than reimplementing
@@ -356,16 +393,15 @@ Also still open:
   seeded glossary terms across all 3 categories (reaction/flavor/technique)
   in one recipe.
 
-**Next:** review/merge PR #24 (standalone ticket tracker) and decide on
-superseded PR #18; otherwise wait for Carson's direction on the rest of
-the punch list — offered the cookbook redesign, design system, and
-Jira-lite UI as options earlier and he said "Done for now" without
-picking one, then came back and asked specifically for the ticket
-tracker to be independent (done, see above).
+**Next:** review/merge PR #24 (standalone ticket tracker, ready); otherwise
+wait for Carson's direction on the rest of the punch list — offered the
+cookbook redesign, design system, and Jira-lite UI as options earlier and
+he said "Done for now" without picking one, then came back and asked
+specifically for the ticket tracker to be independent, confirmed the
+result, and had it made the sole implementation (done, see above).
 
 **Open questions / blockers:** the ingredient-name/measurement ingestion
-bug (item 1) is still waiting on a screenshot from Carson; whether to
-close PR #18 now that PR #24 supersedes it.
+bug (item 1) is still waiting on a screenshot from Carson.
 
 (Reconciliation commit `f6bfb24` also landed this same day, syncing this
 log and `docs/PROJECT_PLAN.md` with git/issue state that had drifted —

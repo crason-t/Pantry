@@ -9,6 +9,7 @@ Here are the things you should run now:
 2. Save progress on all jobs that have not run it yet and push all changes
 3. Let's start working on redesigning the cookbook tab. Right now the main page for cookbook looks really thrown together.
 4. Set up a design system using Claude Design
+5. Create a skill that spins up everything needed at the start of a dev session. Should open the Jira board, a live version of the app, and the backend.
 
 ## Project status
 
