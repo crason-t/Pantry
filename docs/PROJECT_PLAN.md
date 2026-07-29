@@ -4,15 +4,18 @@ A living status tracker for building out the MVP described in `docs/MVP.md`.
 Update this file as work completes or plans change — it's the "what's done,
 what's next" doc; `docs/MVP.md` stays the stable feature/architecture spec.
 
-## Status: First vertical slice working
+## Status: Vertical slice + insights + UI polish pass done
 
 Full scaffolding (Docker, Postgres, backend, DB schema, auth, Anthropic
-wrapper, frontend shell) plus the first real vertical slice — ingest a
-recipe (URL or pasted text) → it's persisted and structured → view it →
-save it to the cookbook → see it listed — all verified end-to-end,
-including in an actual browser. Next up: the remaining recipe-assistant
-features (insights, substitutions, adaptation, scaling, guided cook mode)
-(the cookbook vertical slice).
+wrapper, frontend shell), the first real vertical slice (ingest → view →
+save → cookbook list), "why this dish works" insights, recipe tips, a
+redesigned recipe-detail layout, persistent nav, and username auth are all
+built and verified end-to-end, including in an actual browser. GitHub
+ticket discipline (milestones + issues + commit-msg hook) is live — see
+`SESSION_LOG.md` for session-by-session detail and open issues for
+granular remaining work. Next up: ingredient substitution, equipment/
+method adaptation, serving-scale, and guided cook-mode — plus a Cookbook
+tab redesign (currently just a bare list).
 
 ## Build sequence
 
@@ -88,6 +91,25 @@ features (insights, substitutions, adaptation, scaling, guided cook mode)
       "Why this dish works" panel above the ingredients list — not a raw
       data dump. Verified via curl (seared steak + pan sauce: 6 accurate,
       correctly-anchored insights) and in an actual browser end-to-end.
+- [x] Recipe detail redesign: grouped ingredients (component sub-headings,
+      colloquial quantity as primary + precise weight as secondary), a
+      `RecipeTip` model generated alongside insights and rendered as a
+      "Tips" list, general insights restyled as a card grid, and an
+      experimental List/Cards toggle for Steps (Cards flip to reveal a
+      per-step tip; a "Keys of the recipe" summary compiles every step tip
+      regardless of which Steps view is active). Verified in an actual
+      browser (commits `3be9631`, `7ea5fae`, `964c6b2`).
+- [x] GitHub ticket discipline: milestones per remaining feature area,
+      `.githooks/commit-msg` rejects commits without an issue reference,
+      workflows tag/release on milestone close and nag un-milestoned issues
+      (commit `97864c6`, issue [#6](https://github.com/crason-t/Pantry/issues/6), closed).
+- [x] Persistent nav + username auth + form styling pass: shared `Layout`
+      component gives every authed page a top bar (brand, Cookbook link,
+      + New recipe, user email, log out); users get a required unique
+      `username` alongside email and can log in with either; global
+      button/input/textarea/select styles replace unstyled browser
+      defaults. Verified in an actual browser (commit `5bfec2d`, issue
+      [#7](https://github.com/crason-t/Pantry/issues/7)).
 - [ ] Ingredient substitution endpoint + UI ([#1](https://github.com/crason-t/Pantry/issues/1))
 - [ ] Equipment/method adaptation endpoint + UI ([#2](https://github.com/crason-t/Pantry/issues/2))
 - [ ] Serving-scale endpoint + UI ([#3](https://github.com/crason-t/Pantry/issues/3))

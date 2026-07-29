@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+Manual note added by Carson, call this out at the beginning of the next session no matter what.
+
+Here are the things you should run now:
+1. Here's a bug I found - [Image #1]. When I ingested the recipe it listed the ingredient names sometimes including their measurement too. I edited the first one to look proper. Paste an image of the ingredients table.
+2. Save progress on all jobs that have not run it yet and push all changes
+3. Let's start working on redesigning the cookbook tab. Right now the main page for cookbook looks really thrown together.
+4. Set up a design system using Claude Design
+
 ## Project status
 
 Pantry is in early scaffolding — only `README.md`, `.gitignore`, and `docs/MVP.md` exist. No backend or frontend code has been written yet, so there are no build/lint/test commands to run. Once the backend (`backend/`) and frontend (`frontend/`) skeletons described below exist, this file should be updated with the actual commands (e.g. `uvicorn app.main:app --reload`, `alembic upgrade head`, `npm run dev`) rather than the planned ones listed here.

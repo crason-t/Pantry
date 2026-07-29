@@ -2,6 +2,16 @@
 
 ## Current State (as of 2026-07-29)
 
+Manual note added by Carson, call this out at the beginning of the next session no matter what.
+
+Here are the things you should run now:
+1. Here's a bug I found - [Image #1]. When I ingested the recipe it listed the ingredient names sometimes including their measurement too. I edited the first one to look proper. Paste an image of the ingredients table.
+2. Save progress on all jobs that have not run it yet and push all changes
+3. Let's start working on redesigning the cookbook tab. Right now the main page for cookbook looks really thrown together.
+4. Set up a design system using Claude Design
+5. Finish creating the Jira replica for ticket tracking and make sure it's actually hooked up to the project structure.
+6. Create a skill to get the environment ready for development just by running a simple skill in the right directory. Should spin up things like a few localhost instances with reserved ports for development and testing. Let's also assign names to these and the browser tab name changes depending on the specific feature being tested. Like if a localhost instance is meant to test changes to the Recipe page, it should be called something descriptive like Recipe Rework Test. There should be a page dedicated to navigating between these localhost instances too
+
 - Backend + frontend are fully scaffolded and working end-to-end (FastAPI +
   Postgres, Vite/React/TS SPA): auth, recipe ingestion (URL or pasted text,
   via Claude), "Keys of the recipe" / "Why this dish works" insights, recipe
@@ -9,7 +19,23 @@
   checklist for the authoritative status — everything through "Why this
   works" insights is checked off; substitutions, adaptation, serving-scale,
   guided cook-mode UI, and general polish are still open.
-- This session's changes, **uncommitted**:
+- **GitHub ticket discipline is now live** (commit `97864c6`, issue
+  [#6](https://github.com/crason-t/Pantry/issues/6), closed): one milestone
+  per remaining feature area — substitutions
+  ([#1](https://github.com/crason-t/Pantry/milestone/1)), adaptations
+  ([#2](https://github.com/crason-t/Pantry/milestone/2)), serving-scale
+  ([#3](https://github.com/crason-t/Pantry/milestone/3)), cook mode
+  ([#4](https://github.com/crason-t/Pantry/milestone/4)), polish
+  ([#5](https://github.com/crason-t/Pantry/milestone/5)) — plus a
+  `.githooks/commit-msg` hook (wired via `git config core.hooksPath
+  .githooks`) that **rejects any commit whose message doesn't reference an
+  issue number**, and workflows that tag/release on milestone close and
+  nag un-milestoned issues. This affects every commit from here forward,
+  including the work below: it landed as commit `5bfec2d` ("Add username
+  login, persistent nav, and form styling pass (#7)"), issue
+  [#7](https://github.com/crason-t/Pantry/issues/7) still open (the commit
+  references it but the issue itself hasn't been closed).
+- Nav/auth/styling work from `5bfec2d`, **committed and pushed**:
   - Shared `Layout`/nav component (`frontend/src/components/Layout.tsx`),
     wired into `ProtectedRoute` — persistent top bar (brand link, "Cookbook"
     nav link with active-state underline, "+ New recipe", user email,
@@ -36,52 +62,65 @@
     because it generates insights spanning all 3 glossary categories
     (maillard_reaction, emulsification, umami, acidity, deglaze, braise) —
     not just Maillard.
-- Known, not-yet-fixed gaps (still open):
+- Known, not-yet-fixed gaps (still open, now tracked as GitHub issues):
   - Cookbook list is still a bare `<li>` list, no card grid — the highest-
-    leverage remaining visual gap since it's the landing page.
+    leverage remaining visual gap since it's the landing page. Not yet
+    filed as its own issue; Carson has explicitly asked to start this next.
   - No 404/catch-all route — an unmatched path just renders blank (React
-    Router logs a console warning only, nothing shown to the user).
+    Router logs a console warning only, nothing shown to the user). Not
+    yet filed.
   - `CookModePage` is an intentional placeholder ("guided step-by-step...
-    lands later"), not a bug — last item in the build sequence.
-  - Recipes ingested via URL where the page has schema.org JSON-LD
-    (`backend/app/services/ingestion/jsonld_parser.py`) never get
-    `quantity`/`unit`/`colloquial_quantity`/`component` split out — that
-    parser has always just dumped the whole ingredient line into `name`
-    and `raw_text`. The ingredient-row layout only shows a right-side
-    quantity badge when those fields are populated, so JSON-LD-ingested
-    recipes (locally, ids 9, 10) show rows with nothing on the right —
-    not data loss, just a rendering gap the redesign made more visible
-    than the old single-bullet layout did.
+    lands later"), not a bug — tracked as issue
+    [#4](https://github.com/crason-t/Pantry/issues/4).
+  - Recipes ingested via URL where the page has schema.org JSON-LD never
+    get `quantity`/`unit`/`colloquial_quantity`/`component` split out —
+    tracked as issue
+    [#16](https://github.com/crason-t/Pantry/issues/16).
   - The experimental Steps List/Cards toggle (`RecipeDetailPage.tsx`,
     `StepCard.tsx`) is still being evaluated by the user ("not sure if
     I'll actually like it") — no decision yet on keep/iterate/drop.
     Defaults to List and has no persistence, so trying it costs nothing.
+  - Post-import recipe editing (adjust ingredient quantity/name, add new)
+    — tracked as issue
+    [#8](https://github.com/crason-t/Pantry/issues/8); see memory
+    `planned-recipe-customization`.
+- Additional issues opened (outside this conversation) since the last
+  entry, not yet started: [#12](https://github.com/crason-t/Pantry/issues/12)
+  Claude Code subagents for Pantry dev workflows, [#13](https://github.com/crason-t/Pantry/issues/13)
+  graphic-design skill for one-off visual assets, [#17](https://github.com/crason-t/Pantry/issues/17)
+  internal ticket-tracking UI ("Jira-lite").
 - Untracked, pre-existing, unrelated to this session: `get-docker.sh` (the
   official Docker install script, likely a leftover from setting up Docker
   Desktop) — probably safe to delete or `.gitignore`, but not touched.
 
 ## In progress / blockers
 
-- Nothing blocking. This session's diff (backend username-auth + frontend
-  nav/styling/username UI) is uncommitted and ready for review/commit.
+- Nothing blocking. All code work through commit `5bfec2d` is committed
+  and pushed to `origin/master`.
 
 ## Next steps
 
-- Commit this session's work (consider splitting backend auth changes from
-  frontend nav/styling, or one combined commit — whichever the user prefers).
-- Redesign the Cookbook list as a card grid.
+Per Carson's standing note in `CLAUDE.md` (flagged at the top of every
+session until acted on):
+1. A recipe-ingestion bug: ingested ingredient names sometimes include
+   their measurement text duplicated in the name itself. Needs a screenshot
+   from Carson of the ingredients table to diagnose.
+2. Save progress + push all outstanding changes — done as of this entry.
+3. Redesign the Cookbook tab (currently a bare list, "thrown together").
+4. Set up a design system using Claude Design (Figma).
+5. Finish the Jira-lite ticket-tracking UI and hook it up to the project
+   structure — tracked as issue #17.
+6. Build a skill to spin up named local dev instances (reserved ports,
+   descriptive browser-tab titles per feature under test) plus a page to
+   navigate between them.
+
+Also still open from prior sessions:
 - Add a 404/catch-all route with a real "page not found" message.
 - Continue `docs/PROJECT_PLAN.md`'s remaining build-sequence items:
   substitutions endpoint+UI, adaptation endpoint+UI, serving-scale
   endpoint+UI, guided cook-mode UI, broader loading/error-state polish.
-- Decide on the JSON-LD quantity-splitting gap (teach `jsonld_parser.py` a
-  lightweight split, or leave as a known asymmetry vs. Claude-extracted
-  recipes).
+- Decide on the JSON-LD quantity-splitting gap (issue #16).
 - Get a read on the Steps Cards view before investing further in it.
-- Noted but explicitly deferred by the user: post-import recipe
-  customization (per-ingredient quantity edits, scale-by-pinning-one-
-  ingredient rather than a flat serving multiplier, later substitution) —
-  see memory `planned-recipe-customization`.
 
 ---
 
@@ -108,6 +147,22 @@
 - Reviewed the app in Chrome throughout (Cookbook, Ingest, Recipe Detail,
   Cook Mode, Login) to identify UI gaps: bare unstyled form controls, no
   persistent nav, no card grid on the cookbook list, no 404 handling.
+- Committed and pushed the above as `5bfec2d` (#7), plus GitHub ticket
+  discipline itself landed as `97864c6` (#6, closed) — one milestone per
+  remaining feature area with a `commit-msg` hook enforcing an issue
+  reference on every commit. Carson also opened follow-on issues #8
+  (editable ingredients), #12 (Pantry dev-workflow subagents), #13
+  (graphic-design skill), #16 (JSON-LD quantity-splitting gap), and #17
+  (Jira-lite ticket-tracking UI). Reconciled `SESSION_LOG.md` and
+  `docs/PROJECT_PLAN.md` afterward (this entry) to match actual git/issue
+  state — this had drifted since the log was written mid-session, before
+  the commit and before the new issues existed.
+- Added a standing note at the top of `CLAUDE.md` from Carson: a punch
+  list to surface at the start of every session until acted on (recipe-
+  ingestion ingredient-name bug w/ screenshot pending, save-progress +
+  push [done as of this entry], Cookbook tab redesign, a Claude-Design
+  design system, finishing the Jira-lite UI, and a skill to spin up named
+  local dev instances with per-feature browser-tab titles).
 
 **Decisions:**
 - Button/input styling uses bare-element selectors (`button`, `input`, etc.)
@@ -128,9 +183,11 @@
   seeded glossary terms across all 3 categories (reaction/flavor/technique)
   in one recipe.
 
-**Next:** commit this session's diff; redesign the cookbook list as a card
-grid; add a 404 route; resume the remaining `docs/PROJECT_PLAN.md` build-
-sequence items (substitutions, adaptation, scaling, cook-mode UI, polish).
+**Next:** redesign the cookbook list as a card grid (Carson's next
+explicit ask); diagnose the ingredient-name/measurement ingestion bug once
+a screenshot is provided; add a 404 route; resume the remaining
+`docs/PROJECT_PLAN.md` build-sequence items (substitutions, adaptation,
+scaling, cook-mode UI, polish).
 
 **Open questions / blockers:** none.
 
@@ -165,6 +222,21 @@ sequence items (substitutions, adaptation, scaling, cook-mode UI, polish).
   above, just made more visible by the new row layout.
 - Committed and pushed all of the above in three commits (`3be9631`,
   `7ea5fae`, `964c6b2`).
+- Noted (via `ps`, not assumption, per feedback below) that the `claude`
+  CLI process itself spawns `caffeinate -i -t 300` as a direct child to
+  keep macOS from sleeping — not something invoked through any tool call
+  in this conversation.
+- Saved a feedback memory (`feedback-verify-before-answering`) after
+  answering the caffeinate question wrong from assumption on the first
+  try: verify actual state (`ps`, files, git, API responses) before
+  answering rather than reasoning from general knowledge, whenever a cheap
+  check is available.
+- Picked up a `97864c6` commit made outside this conversation (GitHub
+  ticket discipline: milestones #1-5, issue #6 closed, commit-msg hook
+  requiring an issue reference, milestone-release/require-milestone
+  workflows) and folded it into Current State above — most relevant part:
+  issue #7 already tracks the uncommitted username/nav-shell work noted in
+  the entry above this one, so it's not an orphaned blocker.
 
 **Decisions:**
 - Kept tips + insights generation as a single Claude call (extended the
