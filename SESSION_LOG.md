@@ -14,10 +14,12 @@ Here are the things you should run now:
 
 Checked in after surfacing this list (2026-07-29, same session as the
 `f6bfb24` reconciliation): item 1 needs a screenshot Carson hasn't
-provided yet, and when asked which of 3/4/5 to start next he said "Done
-for now" — no next-task pick made. **Don't re-ask this on the very next
-session start; just wait for direction**, and note item 2 is already done
-(see `f6bfb24`).
+provided yet, and when asked which of 3/4/5 to start next he initially
+said "Done for now" — no pick made at that point. He later came back and
+picked item 5 specifically (ticket tracker independence), which is now
+done as PR #24. Item 2 is done (see `f6bfb24`). Items 3, 4, 6 and the
+item-1 screenshot are still outstanding — don't re-ask, just wait for
+direction.
 
 - Backend + frontend are fully scaffolded and working end-to-end (FastAPI +
   Postgres, Vite/React/TS SPA): auth, recipe ingestion (URL or pasted text,
@@ -138,14 +140,15 @@ session start; just wait for direction**, and note item 2 is already done
   specific to Pantry — checks every worktree under `pantry-worktrees/*` and
   `.claude/worktrees/*`, not just the main checkout, since parallel-agent
   work regularly lands there. Issue #23, committed this session.
-- The main checkout currently has two items **not attributable to this
-  session**, left untouched: a `ticket-tracker/` directory at the repo
-  root (a separate mini-app — own `backend/`, `frontend/`,
-  `docker-compose.yml`, `.env`; matches milestone "Ticket tracker" /
-  issues #17, #19 / PR #18) and `.claude/worktrees/` (other sessions'
-  locked worktrees, currently `quizzical-dazzling-leaf` and
-  `scrollable-cards`). Per the updated skill's own guidance, ownership
-  wasn't clear enough to sweep these into this session's commit/push pass.
+- `.claude/worktrees/` holds other sessions' locked worktrees (currently
+  `quizzical-dazzling-leaf`, `scrollable-cards`, `ticket-tracker`) — left
+  untouched, not attributable to this session.
+- Update: the `ticket-tracker/` directory mentioned in an earlier version
+  of this note is no longer just sitting untracked in the main checkout —
+  it's now committed on branch `standalone-ticket-tracker`, pushed, and
+  open as draft PR #24 (see the History entry below for the full story,
+  including why it superseded PR #18 and two real collisions that came
+  from building it directly in the shared main checkout).
 - Untracked, pre-existing, unrelated to this session: `get-docker.sh` (the
   official Docker install script, likely a leftover from setting up Docker
   Desktop) — probably safe to delete or `.gitignore`, but not touched.
@@ -178,8 +181,9 @@ session until acted on):
    **done this session, see PR #9 above; still needs review/merge.**
 4. Set up a design system using Claude Design (Figma).
 5. Finish the Jira-lite ticket-tracking UI and hook it up to the project
-   structure — tracked as issue #17, in progress as PR #18 (another
-   session's work, not reviewed here).
+   structure — tracked as issue #17. **Done this session as a standalone
+   app, see PR #24 above; supersedes PR #18. Needs review/merge, and a
+   call on whether to close #18.**
 6. Build a skill to spin up named local dev instances (reserved ports,
    descriptive browser-tab titles per feature under test) plus a page to
    navigate between them.
@@ -188,6 +192,10 @@ Also still open:
 - Review and merge PRs #9, #10, #11 (watch the #10/#11 rebase on
   `RecipeDetailPage.tsx`); tear down the ad hoc `:8001`/`:5175` servers
   once #11 is merged and no longer needed.
+- Review and merge PR #24 (standalone ticket tracker); decide whether to
+  close superseded PR #18. To run PR #24 locally: check out
+  `standalone-ticket-tracker` **in a worktree, not the main checkout** —
+  see the collision notes in this entry's "Did" section for why.
 - Add a 404/catch-all route with a real "page not found" message.
 - Continue `docs/PROJECT_PLAN.md`'s remaining build-sequence items:
   adaptation endpoint+UI, serving-scale endpoint+UI, guided cook-mode UI,
@@ -281,6 +289,43 @@ Also still open:
   fetch with nested comments/activity → list epics with progress), `npm
   run build` clean, and confirmed in an actual browser (kanban board,
   ticket detail page, epics page all render and work).
+- Pushed the standalone tracker as branch `standalone-ticket-tracker`
+  (commits `d9dd9cf`, `d88a416`) and opened draft
+  [PR #24](https://github.com/crason-t/Pantry/pull/24) against it,
+  referencing issue #17. Flagged to Carson that this supersedes draft
+  [PR #18](https://github.com/crason-t/Pantry/pull/18) (the old,
+  non-independent version, still open) — his call whether to close #18.
+- Caught two real collisions from running this feature branch directly in
+  the **main checkout** (`/Users/carson/Claude/Projects/Pantry`) instead
+  of an isolated worktree, both stemming from the fact that this directory
+  is being actively shared by multiple concurrent Claude Code sessions
+  right now (confirmed via `lsof` — several `claude.exe`/node processes
+  with it open):
+  1. My `ticket-tracker/docker-compose.yml` defaulted its Compose project
+     name to the directory basename `ticket-tracker`, which collided with
+     the *unrelated* `.claude/worktrees/ticket-tracker` worktree's own
+     `docker-compose.yml` (different DB, same default container name
+     `ticket-tracker-db-1`, same host port 5433) — whichever ran `docker
+     compose up` most recently silently stole the other's container and
+     broke its DB connection. Fixed (commit `d88a416`): pinned an explicit
+     `name: pantry-standalone-ticket-tracker` and moved the host port to
+     5434.
+  2. Twice during this session, another concurrent session running in this
+     same main checkout ran `git checkout` and switched the shared working
+     tree to a different branch (once to `master`) out from under this
+     one — since `ticket-tracker/` only exists as tracked files on the
+     `standalone-ticket-tracker` branch, each switch deleted the directory
+     off disk and broke the locally running dev servers (backend `:8010`,
+     frontend `:5180`). Not recoverable by just switching back once it's
+     someone else's turn to use the checkout — killed the orphaned
+     processes rather than fight over the shared branch state.
+  **Takeaway for future sessions:** don't build or run feature-branch work
+  directly in the main checkout — use `EnterWorktree` (or `pantry-
+  worktrees/*` / `.claude/worktrees/*` by hand) for anything that needs
+  its own branch and its own live dev servers, exactly like the other
+  concurrent sessions' work in this same log already does. The main
+  checkout should be treated as shared/transient, not a safe place to run
+  a long-lived local server from.
 
 **Decisions:**
 - Dropped auth entirely for the ticket tracker rather than reimplementing
@@ -311,12 +356,16 @@ Also still open:
   seeded glossary terms across all 3 categories (reaction/flavor/technique)
   in one recipe.
 
-**Next:** wait for Carson's direction — offered the cookbook redesign,
-design system, and Jira-lite UI as options and he said "Done for now"
-without picking one; don't re-prompt on the next session start.
+**Next:** review/merge PR #24 (standalone ticket tracker) and decide on
+superseded PR #18; otherwise wait for Carson's direction on the rest of
+the punch list — offered the cookbook redesign, design system, and
+Jira-lite UI as options earlier and he said "Done for now" without
+picking one, then came back and asked specifically for the ticket
+tracker to be independent (done, see above).
 
 **Open questions / blockers:** the ingredient-name/measurement ingestion
-bug (item 1) is still waiting on a screenshot from Carson.
+bug (item 1) is still waiting on a screenshot from Carson; whether to
+close PR #18 now that PR #24 supersedes it.
 
 (Reconciliation commit `f6bfb24` also landed this same day, syncing this
 log and `docs/PROJECT_PLAN.md` with git/issue state that had drifted —
