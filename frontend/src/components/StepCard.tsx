@@ -33,28 +33,32 @@ export function StepCard({
     >
       <div className="step-card-inner">
         <div className="step-card-face step-card-front">
-          <span className="step-number">{index + 1}</span>
-          <p className="step-instruction">{instruction}</p>
-          <span className="step-card-hint">
-            {insights.length > 0 ? "Tap for tips" : "Tap to flip"}
-          </span>
+          <div className="step-card-face-scroll">
+            <span className="step-number">{index + 1}</span>
+            <p className="step-instruction">{instruction}</p>
+            <span className="step-card-hint">
+              {insights.length > 0 ? "Tap for tips" : "Tap to flip"}
+            </span>
+          </div>
         </div>
         <div className="step-card-face step-card-back">
-          <span className="step-card-hint">Step {index + 1}</span>
-          {insights.length > 0 ? (
-            insights.map((insight) => (
-              <div className="step-card-tip" key={insight.id} data-category={insight.glossary_term.category}>
-                <span className="insight-badge">
-                  {CATEGORY_LABEL[insight.glossary_term.category] ?? insight.glossary_term.category}
-                  {" · "}
-                  {insight.glossary_term.name}
-                </span>
-                {insight.note && <p className="insight-note">{insight.note}</p>}
-              </div>
-            ))
-          ) : (
-            <p className="insight-note">No extra tips for this step.</p>
-          )}
+          <div className="step-card-face-scroll">
+            <span className="step-card-hint">Step {index + 1}</span>
+            {insights.length > 0 ? (
+              insights.map((insight) => (
+                <div className="step-card-tip" key={insight.id} data-category={insight.glossary_term.category}>
+                  <span className="insight-badge">
+                    {CATEGORY_LABEL[insight.glossary_term.category] ?? insight.glossary_term.category}
+                    {" · "}
+                    {insight.glossary_term.name}
+                  </span>
+                  {insight.note && <p className="insight-note">{insight.note}</p>}
+                </div>
+              ))
+            ) : (
+              <p className="insight-note">No extra tips for this step.</p>
+            )}
+          </div>
         </div>
       </div>
     </div>
