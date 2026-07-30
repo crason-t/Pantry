@@ -10,6 +10,16 @@ No login: this is a local dev tool for one person, so there's no auth layer.
 Attribution (reporter/assignee/comment author/activity actor) is a plain
 string, defaulting to `"carson"`.
 
+This board is the day-to-day plan for Pantry dev work — every bug, feature,
+or other large change gets a ticket here before implementation (see "Ticket
+discipline" in the repo-root `CLAUDE.md`). Two conventions the schema
+enforces or expects:
+
+- `acceptance_criteria` is **required at ticket creation** (API and form
+  both) — concrete, checkable statements of what "done" means.
+- Tickets link to an epic when a relevant one exists; epics mirror the
+  Pantry repo's GitHub milestones.
+
 ## Running it
 
 ```bash

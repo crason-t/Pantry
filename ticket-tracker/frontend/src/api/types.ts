@@ -42,6 +42,7 @@ export interface TicketSummary {
 
 export interface Ticket extends TicketSummary {
   description: string | null;
+  acceptance_criteria: string | null;
   reporter: string;
   created_at: string;
   comments: CommentRead[];

@@ -118,6 +118,10 @@
   width: auto;
 }
 
+.ticket-new-form textarea {
+  flex-basis: 100%;
+}
+
 .ticket-board {
   display: grid;
   grid-template-columns: repeat(5, minmax(220px, 1fr));
@@ -286,7 +290,8 @@
   margin-bottom: 24px;
 }
 
-.ticket-description {
+.ticket-description,
+.ticket-acceptance-criteria {
   white-space: pre-wrap;
 }
 
