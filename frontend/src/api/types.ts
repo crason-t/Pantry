@@ -69,6 +69,15 @@ export interface Recipe {
   tips: RecipeTip[];
 }
 
+export interface SubstitutionSuggestion {
+  substitute: string;
+  reason: string;
+}
+
+export interface SubstitutionSuggestions {
+  suggestions: SubstitutionSuggestion[];
+}
+
 export interface RecipeSummary {
   id: number;
   title: string;
