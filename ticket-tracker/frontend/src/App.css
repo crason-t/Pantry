@@ -109,7 +109,8 @@
   margin: 0 0 20px;
 }
 
-.ticket-new-form input[type="text"] {
+.ticket-new-form input[type="text"],
+.ticket-new-form input[type="url"] {
   flex: 1;
   min-width: 220px;
 }
@@ -282,6 +283,36 @@
   align-items: center;
   gap: 10px;
   font-size: 0.9rem;
+}
+
+.ticket-detail-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ticket-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 720px;
+  margin: 4px 0 24px;
+}
+
+.ticket-edit-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.ticket-edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ticket-test-link {
+  margin-bottom: 16px;
 }
 
 .ticket-reporter {

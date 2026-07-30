@@ -37,6 +37,7 @@ export interface TicketSummary {
   position: number;
   epic_id: number | null;
   assignee: string | null;
+  test_url: string | null;
   updated_at: string;
 }
 
