@@ -1,70 +1,61 @@
 # Pantry — Session Log
 
-## Current State (as of 2026-07-29, evening)
+## Current State (as of 2026-07-29, late evening)
 
 Carson's standing punch-list lives in `docs/Carson's Notes.md` (off-limits
 to edit). Item status:
 1. Recipe-ingestion bug (ingredient names sometimes include duplicated
-   measurement text) — still needs a screenshot from Carson; not fixed.
+   measurement text) — still needs a screenshot from Carson; not fixed
+   (PANTRY-8 / #16 on the board, high priority).
 2. Save progress on all jobs + push all changes — done.
-3. Redesign the Cookbook tab — **done and merged** (PR #9, card grid).
+3. Redesign the Cookbook tab — done and merged (PR #9, card grid).
 4. Design system via "Claude Design" — brand-identity Artifact drafted as a
    proposal (see history), not yet applied to `frontend/`, awaiting
    Carson's read.
-5. Jira-lite ticket tracker — done and merged (PR #24, standalone app at
-   `ticket-tracker/`).
-6. Dev-session-startup skill — not started.
+5. Jira-lite ticket tracker — done and merged (PR #24); now also has
+   per-ticket test links and in-UI editing (PR #32).
+6. Dev-session-startup skill — **done and merged** (PR #30,
+   `/start-session`).
 
-- **All 7 open PRs were merged to `master` this session** (#26 docs
-  reconcile, #20 step-card scroll fix, #9 cookbook card grid, #10
-  ingredient substitutions, #11 per-user ingredient customization, #22
-  test-account seed, #15 Pantry subagents). `gh pr list` is empty; master
-  is `eb8d57e` and builds clean (`tsc -b && vite build`).
-- App now working end-to-end with: auth (email-or-username login),
-  recipe ingestion (URL/pasted text via Claude), insights/tips, cookbook
-  card grid, on-demand ingredient substitutions
-  (`POST /recipes/{id}/ingredients/{id}/substitutions`, click-to-expand
-  panel), per-user ingredient customization ("Edit ingredients" overlay,
-  `IngredientCustomization` table scoped to `SavedRecipe`), scrollable
-  step cards. Remaining feature areas: adaptations (#2), serving-scale
-  (#3), guided cook mode (#4), polish (#5, #7, #16).
-- **None of the merged feature PRs had a manual browser click-through** —
-  merges were verified by typecheck/build only. Recipe detail is the page
-  where #10/#11/#20 all landed; give it a real poke first.
-- Known small gap from the #10×#11 conflict resolution: a custom
-  ingredient added via "Edit ingredients" has no canonical ingredient id,
-  so clicking its name for substitutions shows the panel's error state
-  instead of suggestions. Cosmetic; needs a follow-up ticket.
-- `backend/app/seed_test_user.py` (merged via #22, after a fix-up) now
-  creates the same account existing dev environments already use:
-  `test@mail.com` / username `a` / password `password` — README's "Local
-  dev setup" documents the same.
-- Pantry dev-workflow subagents (`.claude/agents/pantry-backend.md`,
-  `pantry-frontend.md`, `pantry-ui-verify.md`, `pantry-api-test.md`) are
-  now on master (PR #15; its stale SESSION_LOG-reconcile commit was
-  dropped during rebase as superseded by #26).
-- **Worktree/branch cleanup done:** merged remote branches all deleted;
-  local worktrees for cookbook-ui-grid, ingredient-substitution,
-  seed-test-account, pantry-subagents and standalone-ticket-tracker
-  removed with their branches. Still present:
-  - `pantry-worktrees/recipe-customization` — kept because Carson's ad hoc
-    dev servers (backend `:8001` ×2, frontend `:5175`) run from it, with
-    the deliberate **uncommitted** local CORS tweak
-    (`backend/app/main.py` adds `localhost:5175`). Its PR is merged —
-    tear down the servers and remove the worktree whenever done.
-  - `.claude/worktrees/docs-cleanup` (locked, other session; PR #26
-    merged) and `.claude/worktrees/quizzical-dazzling-leaf` (PR #21
-    closed unmerged; `origin/worktree-quizzical-dazzling-leaf` still
-    exists) — other sessions' to clean up.
-- Issue state after the merges: #25, #19, #8 auto-closed. **Close
-  candidates (proposed, not closed): #1 (substitutions — PR #10 merged),
-  #12 (subagents — PR #15 merged), #17 (ticket tracker — PR #24 merged),
-  #23 (save-progress skill extension — shipped and in use).** Closing #1
-  would leave the "Ingredient substitutions" milestone fully closed
-  (triggers the auto-release workflow); same likely for "Dev tooling"
-  once #12+#23 close, and "Ticket tracker" once #17 closes.
-- Untracked by design in the main checkout: `docs/Carson's Notes.md` and
-  `.claude/worktrees/` — consider gitignoring both to quiet `git status`.
+- **Session workflow now has both bookends:** `/start-session` (probes all
+  six dev services, starts only what's missing, verifies health, orients
+  from the board + this log) and `/save-progress`. First live run of
+  `/start-session` found everything already up and only did orientation.
+- Ticket tracker upgrades live (PR #32, migration 0003 applied): optional
+  `test_url` on every ticket ("Test this feature ↗" on the detail page,
+  input on the new-ticket form, activity-logged changes) and a detail-page
+  **Edit** mode for title/description/acceptance criteria/labels/test URL.
+- **Deploy gotcha found & fixed:** the 8010 tracker backend had been
+  started *without* `--reload`, so it kept serving pre-merge code after
+  the pull; restarted with `--reload` (matching the README) so future
+  merges hot-reload. Pantry backend (8000) already ran with `--reload`.
+- App end-to-end state unchanged from the merge sweep: auth, ingestion,
+  insights/tips, cookbook card grid, substitutions, per-user ingredient
+  customization, scrollable step cards. Remaining feature areas:
+  adaptations (#2), serving-scale (#3), guided cook mode (#4), polish
+  (#5, #7, #16).
+- **Still no manual browser click-through** of the merged feature PRs —
+  recipe detail (where #10/#11/#20 landed) remains the page to poke
+  first. Known cosmetic gap: custom-added ingredients show the
+  substitution panel's error state (no canonical ingredient id).
+- Board state: PANTRY-2/3/4/5 backlog, PANTRY-8 backlog (high),
+  PANTRY-12/14/15 done this session. **PANTRY-1 sits in_review but its
+  PR (#10) merged in the previous session — move it to done.**
+- Worktrees still present: `pantry-worktrees/recipe-customization`
+  (Carson's ad hoc servers :8001/:5175 + deliberate uncommitted CORS
+  tweak — tear down whenever done);
+  `.claude/worktrees/ticket-board-claude-workflow` (locked, other
+  session). This session's worktrees (`start-session-skill`,
+  `tracker-edit-testlink`) are merged and clean — removed at session
+  end along with their local branches.
+- Issue state: #29 (start-session skill) and #31 (tracker test-link +
+  editing) closed by this session's merges. **Close candidates carried
+  over (proposed, not closed): #1 (substitutions), #12 (subagents),
+  #17 (ticket tracker), #23 (save-progress extension).** Closing #1
+  fully closes the "Ingredient substitutions" milestone (auto-release);
+  "Dev tooling" closes once #12+#23 do; "Ticket tracker" once #17 does.
+- Untracked in the main checkout: `docs/Carson's Notes.md`, `resources/`,
+  and `.claude/worktrees/` — consider gitignoring to quiet `git status`.
 - No automated tests exist anywhere (`pytest` listed but unused; no
   frontend tests; CI runs no tests/lint on PRs) — still an open decision
   for a single-user MVP.
@@ -72,6 +63,49 @@ to edit). Item status:
 ---
 
 ## History
+
+### 2026-07-29 (late evening — start-session skill + tracker test links/editing)
+**Did:**
+- Built and merged the `/start-session` skill
+  (`.claude/skills/start-session/SKILL.md`, PR #30, closed #29): probes
+  all six dev services first, starts only what's missing (background
+  tasks, `alembic upgrade head` always), polls health before reporting,
+  then orients from the board + this log. First run: all services
+  already up, orientation only.
+- Ticket tracker features (PR #32, closed #31; board PANTRY-14/15):
+  - `test_url` end-to-end — model + migration 0003, schemas, optional
+    input on the new-ticket form, "Test this feature ↗" link on the
+    detail page, changes activity-logged (TRACKED_FIELDS in
+    `ticket-tracker/backend/app/api/routes/tickets.py`).
+  - Detail-page **Edit** mode — pre-filled form for
+    title/description/AC/labels/test URL saved via one PATCH (backend
+    already accepted all fields); label chips now render on the detail
+    page.
+- Verified before merge: migration applied to the live tracker DB
+  (additive), worktree backend exercised on scratch port 8011
+  (create/edit/null-clear/activity via curl), `npm run build` + `oxlint`
+  clean.
+- Post-merge: found 8010 serving stale code (started without
+  `--reload`), restarted it per the README; confirmed `test_url` live
+  and set self-referential test links on PANTRY-14/15 as a production
+  exercise of the feature.
+- Board hygiene throughout: PANTRY-12/14/15 created with AC before
+  implementation, moved in_progress → in_review (PR linked) → done
+  (merge linked).
+**Decisions:**
+- Only `test_url` joined the activity-logged TRACKED_FIELDS (values
+  truncated to the 255-char activity columns); title/description/AC
+  edits aren't activity-logged — long-text diffs don't fit the feed's
+  old→new shape.
+- The edit form requires non-empty title *and* acceptance criteria —
+  blank AC would null it via PATCH, silently violating the board's
+  AC-required rule.
+**Next:**
+- Manual click-through of recipe detail + cookbook grid (carried over).
+- Move PANTRY-1 to done (stale in_review; its PR #10 merged last
+  session).
+- Carson to confirm close candidates #1, #12, #17, #23 (milestone
+  auto-releases fire on full closure).
 
 ### 2026-07-29 (evening — cleanup + PR merge sweep)
 **Did:**
