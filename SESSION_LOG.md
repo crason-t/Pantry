@@ -161,21 +161,19 @@ future context dumps blindly:
 
 ## In progress / blockers
 
-- **8 open draft PRs, all blocked on human review/merge — none have had a
-  manual browser click-through:**
+- **Resolved this pass:** #14 (graphic-design skill) merged — docs/tooling
+  only, no app runtime impact, safe to merge without a browser check. #21
+  (brand-identity logging) closed as superseded — its content was folded
+  into the "Current State" note above instead.
+- **6 open draft PRs remain, blocked on human review/merge — none have had
+  a manual browser click-through:**
   - #9 (cookbook card grid), #10 (ingredient substitutions), #11 (per-user
     ingredient overlay) — all individually mergeable against `master`, but
     #10 and #11 both touch `RecipeDetailPage.tsx`; merge one first and
     rebase the other rather than merging both blind.
-  - #14 (graphic-design skill) — mergeable, docs/tooling only, no app
-    runtime impact.
   - #15 (Pantry dev-workflow subagents) — **CONFLICTING**, needs a rebase;
     touches `SESSION_LOG.md` among other files.
   - #20 (step-card text-clipping fix) — mergeable, isolated CSS/component fix.
-  - #21 (log brand-identity artifact in `SESSION_LOG.md`) — **CONFLICTING**
-    with this entry's own `SESSION_LOG.md` edits; its content has been
-    folded into the "Current State" note above instead of merged as a
-    branch — close it as superseded rather than force a doc-only merge.
   - #22 (seed a local test account) — mergeable, but check before merging:
     its `seed_test_user.py` creates username `testuser` / password
     `testpassword123`, which **doesn't match** the test account already
@@ -200,26 +198,32 @@ to touch):
 1. Recipe-ingestion bug — still needs the screenshot.
 2. Save progress + push — done.
 3. Cookbook tab redesign — done, see PR #9; still needs review/merge.
-4. Design system — brand-identity Artifact drafted (PR #21's content),
-   awaiting Carson's read before any `frontend/` changes.
+4. Design system — brand-identity Artifact drafted (content preserved in
+   this log, PR #21 itself closed as superseded), awaiting Carson's read
+   before any `frontend/` changes.
 5. Jira-lite ticket tracker — **done and merged** (PR #24, standalone app).
 6. Dev-session-startup skill — not started.
 
 Also still open:
-- Review and merge PRs #9, #10, #11, #14, #20 (all individually mergeable);
+- Review and merge PRs #9, #10, #11, #20 (all individually mergeable);
   watch the #10/#11 rebase on `RecipeDetailPage.tsx`. Rebase #15 before
-  merging. Close #21 as superseded (folded into this log entry). Fix the
-  credential mismatch in #22 before merging (see blockers above). Tear down
-  the ad hoc `:8001`/`:5175` servers once #11 is merged and no longer needed.
+  merging. Fix the credential mismatch in #22 before merging (see blockers
+  above). Tear down the ad hoc `:8001`/`:5175` servers once #11 is merged
+  and no longer needed.
 - Add a 404/catch-all route with a real "page not found" message.
 - Continue `docs/PROJECT_PLAN.md`'s remaining build-sequence items:
   adaptation endpoint+UI, serving-scale endpoint+UI, guided cook-mode UI,
   broader loading/error-state polish.
 - Decide on the JSON-LD quantity-splitting gap (issue #16).
 - Get a read on the Steps Cards view before investing further in it.
+- No automated tests exist anywhere (`pytest` is a listed backend dev
+  dependency but unused; no frontend test files either), and neither CI
+  workflow runs tests/lint on PRs — worth deciding whether that's
+  acceptable for a single-user MVP or worth setting up.
 - `.claude/worktrees/quizzical-dazzling-leaf` (locked, branch
-  `worktree-quizzical-dazzling-leaf`) backs open PR #21 — leave it for that
-  session to clean up, or remove once #21 is closed.
+  `worktree-quizzical-dazzling-leaf`) was backing PR #21, now closed —
+  leave the worktree for that session to clean up rather than removing a
+  locked worktree out from under it.
 
 ---
 
