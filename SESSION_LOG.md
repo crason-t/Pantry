@@ -2,24 +2,24 @@
 
 ## Current State (as of 2026-07-29)
 
-Manual note added by Carson, call this out at the beginning of the next session no matter what.
-
-Here are the things you should run now:
-1. Here's a bug I found - [Image #1]. When I ingested the recipe it listed the ingredient names sometimes including their measurement too. I edited the first one to look proper. Paste an image of the ingredients table.
-2. Save progress on all jobs that have not run it yet and push all changes
-3. Let's start working on redesigning the cookbook tab. Right now the main page for cookbook looks really thrown together.
-4. Set up a design system using Claude Design
-5. Finish creating the Jira replica for ticket tracking and make sure it's actually hooked up to the project structure.
-6. Create a skill to get the environment ready for development just by running a simple skill in the right directory. Should spin up things like a few localhost instances with reserved ports for development and testing. Let's also assign names to these and the browser tab name changes depending on the specific feature being tested. Like if a localhost instance is meant to test changes to the Recipe page, it should be called something descriptive like Recipe Rework Test. There should be a page dedicated to navigating between these localhost instances too
-
-Checked in after surfacing this list (2026-07-29, same session as the
-`f6bfb24` reconciliation): item 1 needs a screenshot Carson hasn't
-provided yet, and when asked which of 3/4/5 to start next he initially
-said "Done for now" — no pick made at that point. He later came back and
-picked item 5 specifically (ticket tracker independence), which is now
-done as PR #24. Item 2 is done (see `f6bfb24`). Items 3, 4, 6 and the
-item-1 screenshot are still outstanding — don't re-ask, just wait for
-direction.
+Carson's standing punch-list (originally pasted at the top of `CLAUDE.md`,
+then duplicated here) has been **relocated to `docs/Carson's Notes.md`** —
+that file says "Do not touch this file Claude, it's just for me," so its
+contents aren't reproduced here. Status of the items as of this entry,
+tracked for continuity since the note itself is now off-limits to read into
+future context dumps blindly:
+1. Recipe-ingestion bug (ingredient names sometimes include duplicated
+   measurement text) — still needs a screenshot from Carson; not fixed.
+2. Save progress on all jobs + push all changes — done (see `f6bfb24`).
+3. Redesign the Cookbook tab — done, see PR #9 (still open/draft, unmerged).
+4. Design system via "Claude Design" — no such tool exists; a first-pass
+   brand-identity Artifact was built instead as a proposal (see PR #21 /
+   the "brand identity" history entry below). Draft, not yet applied to
+   `frontend/`, awaiting Carson's read.
+5. Jira-lite ticket tracker, hooked up to the project — done as a
+   standalone app, PR #24, **merged**.
+6. Dev-session-startup skill (named localhost instances, reserved ports,
+   per-feature browser-tab titles, a nav page between them) — not started.
 
 - Backend + frontend are fully scaffolded and working end-to-end (FastAPI +
   Postgres, Vite/React/TS SPA): auth, recipe ingestion (URL or pasted text,
@@ -150,19 +150,39 @@ direction.
   anywhere in the repo. The old in-app version's PR (#18), worktree, git
   branch, and a leftover Docker container were all removed. Full story,
   including a close/reopen incident, in the History entry below.
-- Untracked, pre-existing, unrelated to this session: `get-docker.sh` (the
-  official Docker install script, likely a leftover from setting up Docker
-  Desktop) — probably safe to delete or `.gitignore`, but not touched.
-- `CLAUDE.md`'s "Project status" section still says the repo is
-  pre-scaffolding with no backend/frontend — badly stale, flagged rather
-  than silently edited (see "Flag drift" in the save-progress skill).
+- `get-docker.sh` (the official Docker install script, a leftover from
+  setting up Docker Desktop, untracked and unrelated to the project) —
+  deleted as part of this cleanup pass.
+- `CLAUDE.md`'s "Project status" and "Planned architecture" sections were
+  rewritten this cleanup pass to reflect reality (backend/frontend built
+  and working, actual dev commands, a pointer to `ticket-tracker/`).
+  `docs/PROJECT_PLAN.md`'s "Notes" section had the same stale "backend and
+  frontend directories haven't been created" line — fixed too.
 
 ## In progress / blockers
 
-- **PRs #9, #10, #11 open and draft, blocked on human review/merge** — none
-  have had a manual browser click-through. #10 and #11 both touch
-  `RecipeDetailPage.tsx`; merge one first and rebase the other rather than
-  merging both blind.
+- **Resolved this pass:** #14 (graphic-design skill) merged — docs/tooling
+  only, no app runtime impact, safe to merge without a browser check. #21
+  (brand-identity logging) closed as superseded — its content was folded
+  into the "Current State" note above instead.
+- **6 open draft PRs remain, blocked on human review/merge — none have had
+  a manual browser click-through:**
+  - #9 (cookbook card grid), #10 (ingredient substitutions), #11 (per-user
+    ingredient overlay) — all individually mergeable against `master`, but
+    #10 and #11 both touch `RecipeDetailPage.tsx`; merge one first and
+    rebase the other rather than merging both blind.
+  - #15 (Pantry dev-workflow subagents) — **CONFLICTING**, needs a rebase;
+    touches `SESSION_LOG.md` among other files.
+  - #20 (step-card text-clipping fix) — mergeable, isolated CSS/component fix.
+  - #22 (seed a local test account) — mergeable, but check before merging:
+    its `seed_test_user.py` creates username `testuser` / password
+    `testpassword123`, which **doesn't match** the test account already
+    manually created this repo actually uses (`test@mail.com` / username
+    `a` / password `password`, see above) — the script is a no-op against
+    any DB where that account already exists (matches on email only), but
+    its README section documents credentials that won't work against
+    existing dev environments. Worth a fix-up commit before merge, not a
+    blocker to flag-and-move-on.
 - Two ad hoc dev servers still running by Carson's choice: backend `:8001`
   (×2 processes) and frontend `:5175`, rooted in the
   `pantry-worktrees/recipe-customization` worktree, against the shared
@@ -172,41 +192,38 @@ direction.
 
 ## Next steps
 
-Per Carson's standing note in `CLAUDE.md` (flagged at the top of every
-session until acted on):
-1. A recipe-ingestion bug: ingested ingredient names sometimes include
-   their measurement text duplicated in the name itself. Needs a screenshot
-   from Carson of the ingredients table to diagnose.
-2. Save progress + push all outstanding changes — done as of this entry.
-3. Redesign the Cookbook tab (currently a bare list, "thrown together") —
-   **done this session, see PR #9 above; still needs review/merge.**
-4. Set up a design system using Claude Design (Figma).
-5. Finish the Jira-lite ticket-tracking UI and hook it up to the project
-   structure — tracked as issue #17. **Done this session as a standalone
-   app; Carson confirmed it's what he wants. PR #24 open and ready for
-   review/merge; PR #18 (the superseded in-app version) is closed.**
-6. Build a skill to spin up named local dev instances (reserved ports,
-   descriptive browser-tab titles per feature under test) plus a page to
-   navigate between them.
+Per Carson's standing note (see "Current State" above for the item-by-item
+status — the note itself now lives in `docs/Carson's Notes.md`, off-limits
+to touch):
+1. Recipe-ingestion bug — still needs the screenshot.
+2. Save progress + push — done.
+3. Cookbook tab redesign — done, see PR #9; still needs review/merge.
+4. Design system — brand-identity Artifact drafted (content preserved in
+   this log, PR #21 itself closed as superseded), awaiting Carson's read
+   before any `frontend/` changes.
+5. Jira-lite ticket tracker — **done and merged** (PR #24, standalone app).
+6. Dev-session-startup skill — not started.
 
 Also still open:
-- Review and merge PRs #9, #10, #11 (watch the #10/#11 rebase on
-  `RecipeDetailPage.tsx`); tear down the ad hoc `:8001`/`:5175` servers
-  once #11 is merged and no longer needed.
-- Review and merge PR #24 (standalone ticket tracker, ready for review).
-  To run it locally: check out `standalone-ticket-tracker` **in a
-  worktree** — it's currently at
-  `pantry-worktrees/standalone-ticket-tracker` — **not the main
-  checkout**, see the collision notes in this entry's "Did" section for
-  why.
+- Review and merge PRs #9, #10, #11, #20 (all individually mergeable);
+  watch the #10/#11 rebase on `RecipeDetailPage.tsx`. Rebase #15 before
+  merging. Fix the credential mismatch in #22 before merging (see blockers
+  above). Tear down the ad hoc `:8001`/`:5175` servers once #11 is merged
+  and no longer needed.
 - Add a 404/catch-all route with a real "page not found" message.
 - Continue `docs/PROJECT_PLAN.md`'s remaining build-sequence items:
   adaptation endpoint+UI, serving-scale endpoint+UI, guided cook-mode UI,
   broader loading/error-state polish.
 - Decide on the JSON-LD quantity-splitting gap (issue #16).
 - Get a read on the Steps Cards view before investing further in it.
-- `CLAUDE.md`'s "Project status" section is stale (says pre-scaffolding) —
-  worth a fix next time that file is touched.
+- No automated tests exist anywhere (`pytest` is a listed backend dev
+  dependency but unused; no frontend test files either), and neither CI
+  workflow runs tests/lint on PRs — worth deciding whether that's
+  acceptable for a single-user MVP or worth setting up.
+- `.claude/worktrees/quizzical-dazzling-leaf` (locked, branch
+  `worktree-quizzical-dazzling-leaf`) was backing PR #21, now closed —
+  leave the worktree for that session to clean up rather than removing a
+  locked worktree out from under it.
 
 ---
 

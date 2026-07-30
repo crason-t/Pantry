@@ -138,11 +138,8 @@ argues for a different choice:
 
 ## Notes
 
-- Backend and frontend directories haven't been created — the "Recipe
-  ingestion architecture" and "Data model" sections in `docs/MVP.md` describe
-  the intended shape, not existing files.
 - Update the checkboxes above as steps complete, and add rows to the open-
   decisions table if new tradeoffs surface during implementation.
-- Docker Desktop is now installed and verified (`docker compose up -d db` +
+- Docker Desktop is installed and verified (`docker compose up -d db` +
   `pg_isready` both succeed). See `SESSION_LOG.md` for session-by-session
   detail.

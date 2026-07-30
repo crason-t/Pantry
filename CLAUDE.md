@@ -2,18 +2,31 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Manual note added by Carson, call this out at the beginning of the next session no matter what.
-
-Here are the things you should run now:
-1. Here's a bug I found - [Image #1]. When I ingested the recipe it listed the ingredient names sometimes including their measurement too. I edited the first one to look proper. Paste an image of the ingredients table.
-2. Save progress on all jobs that have not run it yet and push all changes
-3. Let's start working on redesigning the cookbook tab. Right now the main page for cookbook looks really thrown together.
-4. Set up a design system using Claude Design
-5. Create a skill that spins up everything needed at the start of a dev session. Should open the Jira board, a live version of the app, and the backend.
-
 ## Project status
 
-Pantry is in early scaffolding — only `README.md`, `.gitignore`, and `docs/MVP.md` exist. No backend or frontend code has been written yet, so there are no build/lint/test commands to run. Once the backend (`backend/`) and frontend (`frontend/`) skeletons described below exist, this file should be updated with the actual commands (e.g. `uvicorn app.main:app --reload`, `alembic upgrade head`, `npm run dev`) rather than the planned ones listed here.
+Backend and frontend are fully scaffolded and working end-to-end: auth,
+recipe ingestion (URL or pasted text, via Claude), "why this dish works"
+insights, recipe tips, and cookbook save/list. See `docs/PROJECT_PLAN.md`'s
+build-sequence checklist for exactly what's done vs. open, and
+`SESSION_LOG.md` for session-by-session detail.
+
+Local dev commands:
+
+```
+docker compose up -d                                # Postgres (pantry-db-1)
+cd backend && uv sync && uv run alembic upgrade head
+uv run python -m app.seed_glossary                  # starter glossary terms
+uv run uvicorn app.main:app --reload                # http://localhost:8000
+cd frontend && npm install && npm run dev            # http://localhost:5173
+npm run build                                        # tsc -b && vite build
+npm run lint                                         # oxlint
+```
+
+Repo also contains `ticket-tracker/` — a separate, standalone "Jira-lite"
+dev-workflow tool (own backend/frontend/Postgres/ports, no auth). It shares
+this repo for convenience but is unrelated to the recipe app; see
+`ticket-tracker/README.md` for how to run it. Don't confuse its models/routes
+with Pantry's own — they don't share code, DB, or ports.
 
 ## What this project is
 
@@ -21,7 +34,7 @@ A recipe assistant: ingest a recipe (URL or pasted text), reformat it into a sca
 
 Long-term vision is a full home pantry/inventory + recipe + grocery-budget assistant; this repo currently scopes only the recipe-assistant MVP. Full feature list, explicit non-goals, and the data model are in `docs/MVP.md` — read that file before making architectural decisions, and update it when decisions change.
 
-## Planned architecture (not yet built)
+## Architecture
 
 - **Backend**: FastAPI (Python), chosen for async support (LLM calls + URL fetches) and because Pydantic validation pairs naturally with Claude's structured-output JSON schemas.
 - **Frontend**: Vite + React + TypeScript, a plain SPA (not Next.js) — the app lives entirely behind login, so there's no SSR/SEO need, and a plain SPA keeps a clean API boundary that a future React Native app can reuse.
@@ -31,15 +44,15 @@ Long-term vision is a full home pantry/inventory + recipe + grocery-budget assis
 
 The backend is meant to stay a clean, reusable JSON API — not entangled with the web frontend — because a mobile (React Native) client is planned to consume the same API later.
 
-### Recipe ingestion pipeline (planned shape)
+### Recipe ingestion pipeline
 
 Two ingestion paths converge on one internal `ParsedRecipe` schema before persistence:
 - **URL**: fetch the page → check for embedded schema.org JSON-LD `Recipe` data (reliable, no LLM needed) → fall back to a Claude structured-output extraction call if JSON-LD is absent or incomplete.
 - **Pasted text**: always goes through the Claude extraction call (no structured markup to check).
 
-### Data model (planned)
+### Data model
 
-`User`, `Recipe` (with child `Ingredient` and `Step` rows, not JSON blobs, so scaling/display logic can operate on typed data), and `SavedRecipe` as the cookbook join table. Substitutions and adaptations are computed on demand via Claude, not persisted, for MVP. Full field list in `docs/MVP.md`.
+`User`, `Recipe` (with child `Ingredient` and `Step` rows, not JSON blobs, so scaling/display logic can operate on typed data), and `SavedRecipe` as the cookbook join table, plus `GlossaryTerm`/`RecipeInsight`/`RecipeTip` for the "why this works" feature. Substitutions and adaptations are computed on demand via Claude, not persisted, for MVP. Full field list in `docs/MVP.md`.
 
 ## Ticket discipline
 
