@@ -38,6 +38,9 @@ class Ticket(Base):
     # Nullable at the DB level for pre-existing rows; required at the API layer
     # on creation -- every ticket must define what "done" means.
     acceptance_criteria: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Optional URL for trying out the feature this ticket describes (e.g. the
+    # Pantry page where it lives once implemented).
+    test_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="backlog")
     priority: Mapped[str] = mapped_column(String(20), default="medium")
     position: Mapped[float] = mapped_column(Float, default=0)

@@ -33,6 +33,7 @@ class TicketCreate(BaseModel):
     description: str | None = None
     # Required on every new ticket: concrete, checkable statements of "done".
     acceptance_criteria: str = Field(min_length=1)
+    test_url: str | None = None
     status: TicketStatus = "backlog"
     priority: TicketPriority = "medium"
     labels: list[str] = []
@@ -44,6 +45,7 @@ class TicketUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
     acceptance_criteria: str | None = None
+    test_url: str | None = None
     status: TicketStatus | None = None
     priority: TicketPriority | None = None
     labels: list[str] | None = None
@@ -88,6 +90,7 @@ class TicketSummary(BaseModel):
     position: float
     epic_id: int | None
     assignee: str | None
+    test_url: str | None
     updated_at: datetime
 
 

@@ -23,6 +23,7 @@ export function TicketsPage() {
   const [newAcceptanceCriteria, setNewAcceptanceCriteria] = useState("");
   const [newPriority, setNewPriority] = useState<TicketPriority>("medium");
   const [newEpicId, setNewEpicId] = useState<string>("");
+  const [newTestUrl, setNewTestUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [draggedId, setDraggedId] = useState<number | null>(null);
 
@@ -50,12 +51,14 @@ export function TicketsPage() {
         acceptance_criteria: newAcceptanceCriteria.trim(),
         priority: newPriority,
         epic_id: newEpicId ? Number(newEpicId) : null,
+        test_url: newTestUrl.trim() || null,
       });
       setTickets((prev) => (prev ? [...prev, created] : [created]));
       setNewTitle("");
       setNewAcceptanceCriteria("");
       setNewPriority("medium");
       setNewEpicId("");
+      setNewTestUrl("");
       setShowNewForm(false);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
@@ -115,6 +118,12 @@ export function TicketsPage() {
             onChange={(e) => setNewAcceptanceCriteria(e.target.value)}
             rows={3}
             required
+          />
+          <input
+            type="url"
+            placeholder="Test URL (optional) — where to try this feature"
+            value={newTestUrl}
+            onChange={(e) => setNewTestUrl(e.target.value)}
           />
           <select value={newPriority} onChange={(e) => setNewPriority(e.target.value as TicketPriority)}>
             <option value="low">Low</option>

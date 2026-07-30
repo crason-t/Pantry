@@ -8,7 +8,14 @@ from app.schemas.ticket import CommentCreate, CommentRead, TicketCreate, TicketR
 router = APIRouter(prefix="/tickets", tags=["tickets"])
 
 # Fields that get an activity-log entry when changed via PATCH.
-TRACKED_FIELDS = ("status", "priority", "assignee", "epic_id")
+TRACKED_FIELDS = ("status", "priority", "assignee", "epic_id", "test_url")
+
+# TicketActivity.old_value/new_value are String(255); test_url can be up to 1000.
+ACTIVITY_VALUE_MAX = 255
+
+
+def _activity_value(value: object) -> str | None:
+    return str(value)[:ACTIVITY_VALUE_MAX] if value is not None else None
 
 
 def _get_ticket_or_404(db: Session, ticket_id: int) -> Ticket:
@@ -49,6 +56,7 @@ def create_ticket(payload: TicketCreate, db: Session = Depends(get_db)) -> Ticke
         title=payload.title,
         description=payload.description,
         acceptance_criteria=payload.acceptance_criteria,
+        test_url=payload.test_url,
         status=payload.status,
         priority=payload.priority,
         labels=payload.labels,
@@ -82,8 +90,8 @@ def update_ticket(ticket_id: int, payload: TicketUpdate, db: Session = Depends(g
                     ticket_id=ticket.id,
                     actor=DEFAULT_USER,
                     field=field,
-                    old_value=str(getattr(ticket, field)) if getattr(ticket, field) is not None else None,
-                    new_value=str(changes[field]) if changes[field] is not None else None,
+                    old_value=_activity_value(getattr(ticket, field)),
+                    new_value=_activity_value(changes[field]),
                 )
             )
 
