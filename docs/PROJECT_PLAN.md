@@ -110,13 +110,15 @@ tab redesign (currently just a bare list).
       button/input/textarea/select styles replace unstyled browser
       defaults. Verified in an actual browser (commit `5bfec2d`, issue
       [#7](https://github.com/crason-t/Pantry/issues/7)).
-- [ ] Ingredient substitution endpoint + UI ([#1](https://github.com/crason-t/Pantry/issues/1)) —
-      implemented in draft [PR #10](https://github.com/crason-t/Pantry/pull/10):
+- [x] Ingredient substitution endpoint + UI ([#1](https://github.com/crason-t/Pantry/issues/1)) —
+      merged via [PR #10](https://github.com/crason-t/Pantry/pull/10):
       on-demand Claude suggestions via a new
       `POST /recipes/{id}/ingredients/{id}/substitutions` route, click-to-expand
       panel on the recipe detail page. E2E-tested against a real local
-      Postgres with Claude mocked; not yet manually browser-verified or
-      merged — leaving unchecked until then.
+      Postgres with Claude mocked; still no manual browser click-through.
+      Per-user ingredient customization (issue #8, not originally on this
+      checklist) also merged via PR #11 — "Edit ingredients" overlay on
+      recipe detail, `IngredientCustomization` table scoped to `SavedRecipe`.
 - [ ] Equipment/method adaptation endpoint + UI ([#2](https://github.com/crason-t/Pantry/issues/2))
 - [ ] Serving-scale endpoint + UI ([#3](https://github.com/crason-t/Pantry/issues/3))
 - [ ] Guided step-by-step cook-mode UI (purely frontend, consumes steps

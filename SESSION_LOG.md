@@ -1,233 +1,117 @@
 # Pantry — Session Log
 
-## Current State (as of 2026-07-29)
+## Current State (as of 2026-07-29, evening)
 
-Carson's standing punch-list (originally pasted at the top of `CLAUDE.md`,
-then duplicated here) has been **relocated to `docs/Carson's Notes.md`** —
-that file says "Do not touch this file Claude, it's just for me," so its
-contents aren't reproduced here. Status of the items as of this entry,
-tracked for continuity since the note itself is now off-limits to read into
-future context dumps blindly:
+Carson's standing punch-list lives in `docs/Carson's Notes.md` (off-limits
+to edit). Item status:
 1. Recipe-ingestion bug (ingredient names sometimes include duplicated
    measurement text) — still needs a screenshot from Carson; not fixed.
-2. Save progress on all jobs + push all changes — done (see `f6bfb24`).
-3. Redesign the Cookbook tab — done, see PR #9 (still open/draft, unmerged).
-4. Design system via "Claude Design" — no such tool exists; a first-pass
-   brand-identity Artifact was built instead as a proposal (see PR #21 /
-   the "brand identity" history entry below). Draft, not yet applied to
-   `frontend/`, awaiting Carson's read.
-5. Jira-lite ticket tracker, hooked up to the project — done as a
-   standalone app, PR #24, **merged**.
-6. Dev-session-startup skill (named localhost instances, reserved ports,
-   per-feature browser-tab titles, a nav page between them) — not started.
-
-- Backend + frontend are fully scaffolded and working end-to-end (FastAPI +
-  Postgres, Vite/React/TS SPA): auth, recipe ingestion (URL or pasted text,
-  via Claude), "Keys of the recipe" / "Why this dish works" insights, recipe
-  tips, cookbook save/list. See `docs/PROJECT_PLAN.md`'s build-sequence
-  checklist for the authoritative status — everything through "Why this
-  works" insights is checked off; substitutions, adaptation, serving-scale,
-  guided cook-mode UI, and general polish are still open.
-- **GitHub ticket discipline is now live** (commit `97864c6`, issue
-  [#6](https://github.com/crason-t/Pantry/issues/6), closed): one milestone
-  per remaining feature area — substitutions
-  ([#1](https://github.com/crason-t/Pantry/milestone/1)), adaptations
-  ([#2](https://github.com/crason-t/Pantry/milestone/2)), serving-scale
-  ([#3](https://github.com/crason-t/Pantry/milestone/3)), cook mode
-  ([#4](https://github.com/crason-t/Pantry/milestone/4)), polish
-  ([#5](https://github.com/crason-t/Pantry/milestone/5)) — plus a
-  `.githooks/commit-msg` hook (wired via `git config core.hooksPath
-  .githooks`) that **rejects any commit whose message doesn't reference an
-  issue number**, and workflows that tag/release on milestone close and
-  nag un-milestoned issues. This affects every commit from here forward,
-  including the work below: it landed as commit `5bfec2d` ("Add username
-  login, persistent nav, and form styling pass (#7)"), issue
-  [#7](https://github.com/crason-t/Pantry/issues/7) still open (the commit
-  references it but the issue itself hasn't been closed).
-- Nav/auth/styling work from `5bfec2d`, **committed and pushed**:
-  - Shared `Layout`/nav component (`frontend/src/components/Layout.tsx`),
-    wired into `ProtectedRoute` — persistent top bar (brand link, "Cookbook"
-    nav link with active-state underline, "+ New recipe", user email,
-    "Log out") now appears on every authed page. Fixes the earlier gap where
-    leaving the cookbook left no way back except browser history.
-  - Global button/input/textarea/select styling in `frontend/src/index.css`
-    (`.btn-primary` / `.btn-secondary` / `.btn-ghost`, focus-visible states,
-    disabled states) plus form-centering and radio-group layout fixes in
-    `frontend/src/App.css`. Replaces raw browser-default form controls
-    (e.g. the Ingest page radios/input were unstyled and mis-centered).
-  - Username auth: `User` now has a separate, required, unique `username`
-    column alongside `email` (migration
-    `backend/alembic/versions/fe8609b4be38_add_username_to_users.py`,
-    applied). Login accepts either as the identifier
-    (`backend/app/api/routes/auth.py`, `frontend/src/pages/LoginPage.tsx`);
-    registration now collects both (`frontend/src/pages/RegisterPage.tsx`).
-  - Test fixture account for ongoing dev/test use: email `test@mail.com`,
-    username `a`, password `password` — created via direct API calls, not
-    through the UI.
-  - Seeded that test account's cookbook with two recipes: a simple pasted-
-    text one ("Garlic Butter Toast") and a real showcase recipe pulled live
-    from the web ("Red Wine Braised Short Ribs",
-    onceuponachef.com/recipes/red-wine-braised-short-ribs.html) chosen
-    because it generates insights spanning all 3 glossary categories
-    (maillard_reaction, emulsification, umami, acidity, deglaze, braise) —
-    not just Maillard.
-- **Three parallel-agent PRs delivered, all draft/unreviewed/unmerged:**
-  - [PR #9](https://github.com/crason-t/Pantry/pull/9) — cookbook list
-    redesigned from a bare `<li>` list to a responsive card grid
-    (`RecipeCard.tsx`); closes the highest-leverage visual gap noted below
-    previously. References issue #5 (Polish).
-  - [PR #10](https://github.com/crason-t/Pantry/pull/10) — on-demand
-    ingredient-substitution suggestions (issue
-    [#1](https://github.com/crason-t/Pantry/issues/1)): new
-    `POST /recipes/{id}/ingredients/{id}/substitutions` route
-    (`services/substitutions.py`, Claude structured output), click-to-expand
-    `SubstitutionPanel` on the recipe detail page. Nothing persisted, per
-    `docs/MVP.md`.
-  - [PR #11](https://github.com/crason-t/Pantry/pull/11) — per-user
-    ingredient customization (issue
-    [#8](https://github.com/crason-t/Pantry/issues/8)): new
-    `IngredientCustomization` table scoped to `SavedRecipe` (migration
-    `f53637646efe`) so edits never mutate the shared `Ingredient` rows other
-    users' saved copies of the same recipe point at; merge-at-read-time
-    service layer; "Edit ingredients" toggle on the recipe detail page.
-    Deliberately left `IngredientRow`'s internals untouched to minimize
-    collision with PR #10 — **both PRs touch `RecipeDetailPage.tsx`, so
-    expect a rebase/merge-order decision between them.**
-  - None of the three have had a human browser click-through yet (PR #10 was
-    E2E-tested against real Postgres with Claude mocked; PR #11's migration
-    was verified up/down/up against Postgres; PR #9's build/lint passed) —
-    manual verification is still outstanding before merge.
-- **Scope creep caught and corrected mid-session:** the PR #11 agent kept
-  acting after its assigned task was done — stood up ad hoc dev servers
-  (backend `:8001` ×2, frontend `:5175`) against the shared local Postgres
-  with an uncommitted local-only CORS tweak
-  (`backend/app/main.py`, adds `localhost:5175` to `allow_origins`), and
-  unilaterally filed issue #16 (see below). Reviewed with Carson: the
-  servers stay running for now (his call), the CORS tweak stays
-  **uncommitted** (it's a debugging convenience for that ad hoc setup, not
-  part of the feature — don't ship it in PR #11), and issue #16 stays open.
-  No standing change made to how agents operate — treated as a one-off.
-- Known, not-yet-fixed gaps (still open, now tracked as GitHub issues):
-  - No 404/catch-all route — an unmatched path just renders blank (React
-    Router logs a console warning only, nothing shown to the user). Not
-    yet filed.
-  - `CookModePage` is an intentional placeholder ("guided step-by-step...
-    lands later"), not a bug — tracked as issue
-    [#4](https://github.com/crason-t/Pantry/issues/4).
-  - Recipes ingested via URL where the page has schema.org JSON-LD never
-    get `quantity`/`unit`/`colloquial_quantity`/`component` split out —
-    tracked as issue
-    [#16](https://github.com/crason-t/Pantry/issues/16) (see scope-creep
-    note above for how this one got filed).
-  - The experimental Steps List/Cards toggle (`RecipeDetailPage.tsx`,
-    `StepCard.tsx`) is still being evaluated by the user ("not sure if
-    I'll actually like it") — no decision yet on keep/iterate/drop.
-    Defaults to List and has no persistence, so trying it costs nothing.
-- Additional issues opened (outside this conversation) since the last
-  entry: [#12](https://github.com/crason-t/Pantry/issues/12) Claude Code
-  subagents for Pantry dev workflows, [#13](https://github.com/crason-t/Pantry/issues/13)
-  graphic-design skill for one-off visual assets, [#17](https://github.com/crason-t/Pantry/issues/17)
-  internal ticket-tracking UI ("Jira-lite", milestone "Ticket tracker",
-  draft [PR #18](https://github.com/crason-t/Pantry/pull/18)), and
-  [#19](https://github.com/crason-t/Pantry/issues/19) seed a persistent test
-  account. **New this session:**
-  [#23](https://github.com/crason-t/Pantry/issues/23) extend the
-  `save-progress` skill (below) — closed out this session.
-- **The `save-progress` skill** (`.claude/skills/save-progress/SKILL.md`)
-  was extended to match NeeDoh's version: commits/pushes outstanding work
-  with issue references, proposes (doesn't auto-close) ticket-reconciliation
-  candidates, flags drift against `CLAUDE.md`/`docs/MVP.md`, and — new,
-  specific to Pantry — checks every worktree under `pantry-worktrees/*` and
-  `.claude/worktrees/*`, not just the main checkout, since parallel-agent
-  work regularly lands there. Issue #23, committed this session.
-- `.claude/worktrees/` holds other sessions' locked worktrees (currently
-  `quizzical-dazzling-leaf`, `scrollable-cards`) — left untouched, not
-  attributable to this session.
-- Resolved: the ticket tracker is a standalone app at `ticket-tracker/`
-  on branch `standalone-ticket-tracker`, pushed, open as
-  [PR #24](https://github.com/crason-t/Pantry/pull/24) (ready for
-  review, not draft) — the only ticket-tracker implementation left
-  anywhere in the repo. The old in-app version's PR (#18), worktree, git
-  branch, and a leftover Docker container were all removed. Full story,
-  including a close/reopen incident, in the History entry below.
-- `get-docker.sh` (the official Docker install script, a leftover from
-  setting up Docker Desktop, untracked and unrelated to the project) —
-  deleted as part of this cleanup pass.
-- `CLAUDE.md`'s "Project status" and "Planned architecture" sections were
-  rewritten this cleanup pass to reflect reality (backend/frontend built
-  and working, actual dev commands, a pointer to `ticket-tracker/`).
-  `docs/PROJECT_PLAN.md`'s "Notes" section had the same stale "backend and
-  frontend directories haven't been created" line — fixed too.
-
-## In progress / blockers
-
-- **Resolved this pass:** #14 (graphic-design skill) merged — docs/tooling
-  only, no app runtime impact, safe to merge without a browser check. #21
-  (brand-identity logging) closed as superseded — its content was folded
-  into the "Current State" note above instead.
-- **6 open draft PRs remain, blocked on human review/merge — none have had
-  a manual browser click-through:**
-  - #9 (cookbook card grid), #10 (ingredient substitutions), #11 (per-user
-    ingredient overlay) — all individually mergeable against `master`, but
-    #10 and #11 both touch `RecipeDetailPage.tsx`; merge one first and
-    rebase the other rather than merging both blind.
-  - #15 (Pantry dev-workflow subagents) — **CONFLICTING**, needs a rebase;
-    touches `SESSION_LOG.md` among other files.
-  - #20 (step-card text-clipping fix) — mergeable, isolated CSS/component fix.
-  - #22 (seed a local test account) — mergeable, but check before merging:
-    its `seed_test_user.py` creates username `testuser` / password
-    `testpassword123`, which **doesn't match** the test account already
-    manually created this repo actually uses (`test@mail.com` / username
-    `a` / password `password`, see above) — the script is a no-op against
-    any DB where that account already exists (matches on email only), but
-    its README section documents credentials that won't work against
-    existing dev environments. Worth a fix-up commit before merge, not a
-    blocker to flag-and-move-on.
-- Two ad hoc dev servers still running by Carson's choice: backend `:8001`
-  (×2 processes) and frontend `:5175`, rooted in the
-  `pantry-worktrees/recipe-customization` worktree, against the shared
-  local Postgres. Not blocking anything, just worth knowing they're live.
-- Otherwise nothing blocking — all code work through this session's
-  commits is committed and pushed.
-
-## Next steps
-
-Per Carson's standing note (see "Current State" above for the item-by-item
-status — the note itself now lives in `docs/Carson's Notes.md`, off-limits
-to touch):
-1. Recipe-ingestion bug — still needs the screenshot.
-2. Save progress + push — done.
-3. Cookbook tab redesign — done, see PR #9; still needs review/merge.
-4. Design system — brand-identity Artifact drafted (content preserved in
-   this log, PR #21 itself closed as superseded), awaiting Carson's read
-   before any `frontend/` changes.
-5. Jira-lite ticket tracker — **done and merged** (PR #24, standalone app).
+2. Save progress on all jobs + push all changes — done.
+3. Redesign the Cookbook tab — **done and merged** (PR #9, card grid).
+4. Design system via "Claude Design" — brand-identity Artifact drafted as a
+   proposal (see history), not yet applied to `frontend/`, awaiting
+   Carson's read.
+5. Jira-lite ticket tracker — done and merged (PR #24, standalone app at
+   `ticket-tracker/`).
 6. Dev-session-startup skill — not started.
 
-Also still open:
-- Review and merge PRs #9, #10, #11, #20 (all individually mergeable);
-  watch the #10/#11 rebase on `RecipeDetailPage.tsx`. Rebase #15 before
-  merging. Fix the credential mismatch in #22 before merging (see blockers
-  above). Tear down the ad hoc `:8001`/`:5175` servers once #11 is merged
-  and no longer needed.
-- Add a 404/catch-all route with a real "page not found" message.
-- Continue `docs/PROJECT_PLAN.md`'s remaining build-sequence items:
-  adaptation endpoint+UI, serving-scale endpoint+UI, guided cook-mode UI,
-  broader loading/error-state polish.
-- Decide on the JSON-LD quantity-splitting gap (issue #16).
-- Get a read on the Steps Cards view before investing further in it.
-- No automated tests exist anywhere (`pytest` is a listed backend dev
-  dependency but unused; no frontend test files either), and neither CI
-  workflow runs tests/lint on PRs — worth deciding whether that's
-  acceptable for a single-user MVP or worth setting up.
-- `.claude/worktrees/quizzical-dazzling-leaf` (locked, branch
-  `worktree-quizzical-dazzling-leaf`) was backing PR #21, now closed —
-  leave the worktree for that session to clean up rather than removing a
-  locked worktree out from under it.
+- **All 7 open PRs were merged to `master` this session** (#26 docs
+  reconcile, #20 step-card scroll fix, #9 cookbook card grid, #10
+  ingredient substitutions, #11 per-user ingredient customization, #22
+  test-account seed, #15 Pantry subagents). `gh pr list` is empty; master
+  is `eb8d57e` and builds clean (`tsc -b && vite build`).
+- App now working end-to-end with: auth (email-or-username login),
+  recipe ingestion (URL/pasted text via Claude), insights/tips, cookbook
+  card grid, on-demand ingredient substitutions
+  (`POST /recipes/{id}/ingredients/{id}/substitutions`, click-to-expand
+  panel), per-user ingredient customization ("Edit ingredients" overlay,
+  `IngredientCustomization` table scoped to `SavedRecipe`), scrollable
+  step cards. Remaining feature areas: adaptations (#2), serving-scale
+  (#3), guided cook mode (#4), polish (#5, #7, #16).
+- **None of the merged feature PRs had a manual browser click-through** —
+  merges were verified by typecheck/build only. Recipe detail is the page
+  where #10/#11/#20 all landed; give it a real poke first.
+- Known small gap from the #10×#11 conflict resolution: a custom
+  ingredient added via "Edit ingredients" has no canonical ingredient id,
+  so clicking its name for substitutions shows the panel's error state
+  instead of suggestions. Cosmetic; needs a follow-up ticket.
+- `backend/app/seed_test_user.py` (merged via #22, after a fix-up) now
+  creates the same account existing dev environments already use:
+  `test@mail.com` / username `a` / password `password` — README's "Local
+  dev setup" documents the same.
+- Pantry dev-workflow subagents (`.claude/agents/pantry-backend.md`,
+  `pantry-frontend.md`, `pantry-ui-verify.md`, `pantry-api-test.md`) are
+  now on master (PR #15; its stale SESSION_LOG-reconcile commit was
+  dropped during rebase as superseded by #26).
+- **Worktree/branch cleanup done:** merged remote branches all deleted;
+  local worktrees for cookbook-ui-grid, ingredient-substitution,
+  seed-test-account, pantry-subagents and standalone-ticket-tracker
+  removed with their branches. Still present:
+  - `pantry-worktrees/recipe-customization` — kept because Carson's ad hoc
+    dev servers (backend `:8001` ×2, frontend `:5175`) run from it, with
+    the deliberate **uncommitted** local CORS tweak
+    (`backend/app/main.py` adds `localhost:5175`). Its PR is merged —
+    tear down the servers and remove the worktree whenever done.
+  - `.claude/worktrees/docs-cleanup` (locked, other session; PR #26
+    merged) and `.claude/worktrees/quizzical-dazzling-leaf` (PR #21
+    closed unmerged; `origin/worktree-quizzical-dazzling-leaf` still
+    exists) — other sessions' to clean up.
+- Issue state after the merges: #25, #19, #8 auto-closed. **Close
+  candidates (proposed, not closed): #1 (substitutions — PR #10 merged),
+  #12 (subagents — PR #15 merged), #17 (ticket tracker — PR #24 merged),
+  #23 (save-progress skill extension — shipped and in use).** Closing #1
+  would leave the "Ingredient substitutions" milestone fully closed
+  (triggers the auto-release workflow); same likely for "Dev tooling"
+  once #12+#23 close, and "Ticket tracker" once #17 closes.
+- Untracked by design in the main checkout: `docs/Carson's Notes.md` and
+  `.claude/worktrees/` — consider gitignoring both to quiet `git status`.
+- No automated tests exist anywhere (`pytest` listed but unused; no
+  frontend tests; CI runs no tests/lint on PRs) — still an open decision
+  for a single-user MVP.
 
 ---
 
 ## History
+
+### 2026-07-29 (evening — cleanup + PR merge sweep)
+**Did:**
+- Directory cleanup: fast-forwarded stale local master, deleted leftover
+  `get-docker.sh`, removed the merged `standalone-ticket-tracker`
+  worktree + branch.
+- Merged all 7 open PRs, in conflict-minimizing order: #26 (docs
+  reconcile) → #20 (step-card scroll fix) → #9 (cookbook card grid) →
+  #10 (ingredient substitutions) → #11 (ingredient customization,
+  rebased) → #22 (test-account seed, fixed) → #15 (subagents, rebased).
+- #11 rebase: resolved the known `RecipeDetailPage.tsx` collision with
+  #10 by keeping the "Edit ingredients" UI and rendering the merged
+  ingredient list through the substitution-capable `IngredientRow`
+  (added the missing `recipeId` prop); verified with a full
+  build. Carson's local CORS tweak was stashed/restored around the
+  rebase.
+- #22 fix-up before merge (per this log's blocker note): seed script +
+  README now use the credentials existing environments actually have
+  (`test@mail.com` / `a` / `password`) instead of
+  `testuser`/`testpassword123`.
+- #15 rebase: kept the four `.claude/agents/*.md` files, dropped its
+  stale SESSION_LOG-reconcile commit (superseded by #26's rewrite).
+- Post-merge: deleted all merged remote branches, removed now-obsolete
+  local worktrees/branches, final `npm run build` on master passes.
+**Decisions:**
+- Merged without manual browser click-throughs (Carson asked for the
+  merge sweep; build/typecheck only) — flagged recipe detail as the page
+  to verify by hand.
+- Seed-script credentials aligned to the pre-existing manual account
+  rather than the other way around, so documented logins work in every
+  environment.
+**Next:**
+- Manually click through recipe detail (substitutions + edit-ingredients
+  + step cards) and the cookbook grid.
+- Close-candidate issues: #1, #12, #17, #23 (Carson to confirm; #1
+  closes out its milestone → auto-release).
+- File the follow-up ticket for substitutions-on-custom-ingredients
+  error state; tear down `:8001`/`:5175` servers + remove the
+  `recipe-customization` worktree when done with them.
+
 
 ### 2026-07-29
 **Did:**
