@@ -12,5 +12,8 @@ See `docs/MVP.md` for the full feature spec and architecture decisions.
 
 ## Status
 
-Early scaffolding — backend and frontend skeletons are being built out per
-`docs/MVP.md`.
+Backend and frontend are built and working end-to-end (auth, recipe
+ingestion, "why this dish works" insights, cookbook save/list); several
+features remain (substitutions, adaptations, serving-scale, guided cook
+mode). See `docs/PROJECT_PLAN.md` for the build-sequence checklist and
+`SESSION_LOG.md` for session-by-session detail.
