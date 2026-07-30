@@ -56,15 +56,38 @@ Two ingestion paths converge on one internal `ParsedRecipe` schema before persis
 
 ## Ticket discipline
 
-Remaining MVP work is tracked as GitHub Milestones (one per feature area) with
-one Issue per milestone, in the [Pantry](https://github.com/crason-t/Pantry)
-repo. `docs/PROJECT_PLAN.md` stays the narrative build-sequence checklist —
-the milestones/issues are the enforceable version of the same plan, not a
-replacement for it.
+Day-to-day work is planned and tracked on the local **ticket board**
+(`ticket-tracker/` — UI http://localhost:5180, API http://localhost:8010;
+see `ticket-tracker/README.md` to start it). GitHub Milestones/Issues in the
+[Pantry](https://github.com/crason-t/Pantry) repo remain the commit/release
+layer, and `docs/PROJECT_PLAN.md` stays the narrative build-sequence
+checklist.
+
+### Board rules (apply to Claude-created and Carson-created tickets alike)
+
+- **Every bug, feature, or other large code change gets a board ticket
+  before implementation starts.** Create it via the UI or the API:
+  `POST http://localhost:8010/tickets` with `title`, `description`,
+  `acceptance_criteria`, `labels` (e.g. `["bug"]`, `["feature"]`,
+  `["chore"]`), `priority`, and `epic_id`.
+- **Acceptance criteria are required** — the API rejects ticket creation
+  without `acceptance_criteria`. Write 2–5 concrete, checkable statements
+  defining "done", not a restatement of the title.
+- **Link the ticket to an epic when a relevant one exists**
+  (`GET http://localhost:8010/epics`). Epics mirror the GitHub milestones;
+  if work fits no existing epic, create a new epic (and the matching GitHub
+  milestone) rather than leaving the ticket unlinked.
+- Move status as work progresses (`PATCH /tickets/{id}`): `in_progress`
+  when starting, `in_review` when a PR opens, `done` when it merges — and
+  add a comment linking the PR.
+- If the tracker isn't running, start it (see `ticket-tracker/README.md`)
+  rather than skipping the ticket.
+
+### GitHub layer (commits and releases)
 
 - A **commit-msg hook** (`.githooks/commit-msg`, wired via
   `git config core.hooksPath .githooks`) rejects any commit whose message
-  doesn't reference an issue number (`#3`). Reference the issue you're
+  doesn't reference a GitHub issue number (`#3`). Reference the issue you're
   closing or advancing in every commit message.
 - When a milestone is closed, `.github/workflows/milestone-release.yml`
   automatically tags the default branch and cuts a GitHub Release listing

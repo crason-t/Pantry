@@ -35,6 +35,9 @@ class Ticket(Base):
     key: Mapped[str | None] = mapped_column(String(20), unique=True, index=True, nullable=True)
     title: Mapped[str] = mapped_column(String(500))
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Nullable at the DB level for pre-existing rows; required at the API layer
+    # on creation -- every ticket must define what "done" means.
+    acceptance_criteria: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="backlog")
     priority: Mapped[str] = mapped_column(String(20), default="medium")
     position: Mapped[float] = mapped_column(Float, default=0)

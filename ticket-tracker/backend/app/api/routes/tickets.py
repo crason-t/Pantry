@@ -48,6 +48,7 @@ def create_ticket(payload: TicketCreate, db: Session = Depends(get_db)) -> Ticke
     ticket = Ticket(
         title=payload.title,
         description=payload.description,
+        acceptance_criteria=payload.acceptance_criteria,
         status=payload.status,
         priority=payload.priority,
         labels=payload.labels,

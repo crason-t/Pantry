@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 TicketStatus = Literal["backlog", "todo", "in_progress", "in_review", "done"]
 TicketPriority = Literal["low", "medium", "high", "urgent"]
@@ -31,6 +31,8 @@ class EpicProgress(EpicRead):
 class TicketCreate(BaseModel):
     title: str
     description: str | None = None
+    # Required on every new ticket: concrete, checkable statements of "done".
+    acceptance_criteria: str = Field(min_length=1)
     status: TicketStatus = "backlog"
     priority: TicketPriority = "medium"
     labels: list[str] = []
@@ -41,6 +43,7 @@ class TicketCreate(BaseModel):
 class TicketUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
+    acceptance_criteria: str | None = None
     status: TicketStatus | None = None
     priority: TicketPriority | None = None
     labels: list[str] | None = None
@@ -90,6 +93,7 @@ class TicketSummary(BaseModel):
 
 class TicketRead(TicketSummary):
     description: str | None
+    acceptance_criteria: str | None
     reporter: str
     created_at: datetime
     comments: list[CommentRead]

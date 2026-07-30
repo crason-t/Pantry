@@ -20,6 +20,7 @@ export function TicketsPage() {
   const [epicFilter, setEpicFilter] = useState<string>(searchParams.get("epic") ?? "all");
   const [showNewForm, setShowNewForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
+  const [newAcceptanceCriteria, setNewAcceptanceCriteria] = useState("");
   const [newPriority, setNewPriority] = useState<TicketPriority>("medium");
   const [newEpicId, setNewEpicId] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,16 +42,18 @@ export function TicketsPage() {
 
   async function handleCreate(event: FormEvent) {
     event.preventDefault();
-    if (!newTitle.trim()) return;
+    if (!newTitle.trim() || !newAcceptanceCriteria.trim()) return;
     setIsSubmitting(true);
     try {
       const created = await apiPostJson<TicketSummary>("/tickets", {
         title: newTitle.trim(),
+        acceptance_criteria: newAcceptanceCriteria.trim(),
         priority: newPriority,
         epic_id: newEpicId ? Number(newEpicId) : null,
       });
       setTickets((prev) => (prev ? [...prev, created] : [created]));
       setNewTitle("");
+      setNewAcceptanceCriteria("");
       setNewPriority("medium");
       setNewEpicId("");
       setShowNewForm(false);
@@ -104,6 +107,13 @@ export function TicketsPage() {
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             autoFocus
+            required
+          />
+          <textarea
+            placeholder="Acceptance criteria (required) — concrete, checkable statements of done"
+            value={newAcceptanceCriteria}
+            onChange={(e) => setNewAcceptanceCriteria(e.target.value)}
+            rows={3}
             required
           />
           <select value={newPriority} onChange={(e) => setNewPriority(e.target.value as TicketPriority)}>

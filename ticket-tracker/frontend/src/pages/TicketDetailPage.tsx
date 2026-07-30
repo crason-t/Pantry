@@ -129,6 +129,11 @@ export function TicketDetailPage() {
       <h2>Description</h2>
       <p className="ticket-description">{ticket.description || "No description."}</p>
 
+      <h2>Acceptance criteria</h2>
+      <p className="ticket-acceptance-criteria">
+        {ticket.acceptance_criteria || "None recorded (pre-dates the acceptance-criteria requirement)."}
+      </p>
+
       <h2>Comments</h2>
       <ul className="ticket-comment-list">
         {ticket.comments.length === 0 && <li className="ticket-empty">No comments yet.</li>}
