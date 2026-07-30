@@ -45,10 +45,10 @@ label {
 }
 
 .app-nav-brand {
+  /* Caprasimo only ships weight 400 — never bold it. */
   font-family: var(--heading);
-  font-weight: 700;
+  font-weight: 400;
   font-size: 1.25rem;
-  letter-spacing: -0.02em;
   color: var(--text-h);
   text-decoration: none;
 }
@@ -200,8 +200,8 @@ label {
 }
 
 .ingredient-group-title {
-  font-size: 1rem;
-  font-weight: 700;
+  /* h3 element: Caprasimo weight 400 comes from the global heading rule. */
+  font-size: 16px;
   color: var(--text-h);
   margin: 20px 0 4px;
 }
@@ -433,7 +433,10 @@ label {
 }
 
 .step-instruction {
+  /* Recipe body copy reads slightly larger than the 15px base per the brand guide. */
   margin: 4px 0;
+  font-size: 16px;
+  line-height: 1.65;
 }
 
 .step-tips-summary {
@@ -442,8 +445,8 @@ label {
 }
 
 .step-tips-summary h3 {
-  font-size: 1rem;
-  font-weight: 700;
+  /* Sized down to the h4 slot; weight 400 comes from the global heading rule. */
+  font-size: 20px;
   color: var(--text-h);
   margin: 0 0 12px;
 }
@@ -592,7 +595,8 @@ label {
   border-radius: 50%;
   background: var(--accent-bg);
   color: var(--accent);
-  font-weight: 800;
+  /* Figtree loads 400/600/700 only. */
+  font-weight: 700;
   font-size: 0.75rem;
 }
 
@@ -665,9 +669,9 @@ label {
 }
 
 .recipe-card-title {
+  /* h3 element: Caprasimo weight 400 comes from the global heading rule. */
   margin: 0;
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: 16px;
   color: var(--text-h);
 }
 
