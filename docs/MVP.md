@@ -88,6 +88,23 @@ better once mobile is in scope.
   left general when it isn't about one specific line.
 - **SavedRecipe** (cookbook entry) — id, user_id (FK), recipe_id (FK),
   saved_at, unique(user_id, recipe_id)
+- **IngredientCustomization** (per-user ingredient overlay) — id,
+  saved_recipe_id (FK to SavedRecipe), ingredient_id (FK to Ingredient,
+  nullable), action (enum: modify | remove | add), quantity, unit, name,
+  position, created_at, updated_at, unique(saved_recipe_id, ingredient_id).
+  `Recipe`/`Ingredient` rows are shared canonical data populated once at
+  ingestion time — the same Recipe can be saved by many users, so a
+  customization can **never** mutate a canonical Ingredient row in place
+  (that would silently change what every other user who saved the same
+  recipe sees). Instead, each add/modify/remove a user makes to their own
+  copy of a recipe's ingredients is recorded here, scoped to their
+  SavedRecipe row, and merged with the canonical Ingredient rows at read
+  time. `action=modify` overrides quantity/unit/name for one canonical
+  ingredient (ingredient_id set); `action=remove` hides one canonical
+  ingredient from this user's view; `action=add` is a brand-new line with no
+  canonical counterpart (ingredient_id null). Customization is only
+  meaningful once a recipe is saved — there's no SavedRecipe row to scope an
+  overlay to before that.
 
 Ingredients, steps, and insights are child rows (not JSON blobs) so scaling,
 the scannable-structure view, and inline insight anchoring can all operate on

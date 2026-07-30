@@ -85,3 +85,39 @@ export interface RecipeSummary {
   total_time: string | null;
   saved_at: string;
 }
+
+// One ingredient row after this user's ingredient customizations (see
+// api/ingredientCustomizations.ts) are merged with the recipe's canonical
+// ingredients. `ingredient_id` is the canonical Ingredient this row is
+// backed by (null for a line the user added themselves); `customization_id`
+// is set whenever this row has been edited or added by the user.
+export interface MergedIngredient {
+  ingredient_id: number | null;
+  customization_id: number | null;
+  position: number;
+  quantity: string | null;
+  unit: string | null;
+  colloquial_quantity: string | null;
+  name: string;
+  component: string | null;
+  notes: string | null;
+  raw_text: string;
+  is_custom: boolean;
+}
+
+export interface CustomizedIngredients {
+  is_saved: boolean;
+  ingredients: MergedIngredient[];
+}
+
+export interface IngredientEdit {
+  ingredient_id: number | null;
+  quantity: string | null;
+  unit: string | null;
+  name: string;
+}
+
+export interface IngredientListEdit {
+  items: IngredientEdit[];
+  removed_ingredient_ids: number[];
+}
