@@ -1,16 +1,60 @@
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-  --accent-contrast: #ffffff;
+  /* "Organic" branding schema tokens — cream ground, terracotta accent,
+     sage second accent. Ramps generated in OKLCH on one shared lightness
+     scale; see resources/Pantry app branding schema. */
+  --color-bg: #f5ead8;
+  --color-surface: #ebddc5;
+  --color-text: #201e1d;
+  --color-accent: #c67139;
+  --color-accent-2: #7a8a5e;
+  --color-divider: color-mix(in srgb, #201e1d 16%, transparent);
+
+  --color-neutral-100: #f9f4ed;
+  --color-neutral-200: #eee7db;
+  --color-neutral-300: #dcd3c4;
+  --color-neutral-400: #c0b6a5;
+  --color-neutral-500: #a19786;
+  --color-neutral-600: #82796a;
+  --color-neutral-700: #645c50;
+  --color-neutral-800: #474238;
+  --color-neutral-900: #2e2b25;
+
+  --color-accent-100: #fff2eb;
+  --color-accent-200: #ffe1d0;
+  --color-accent-300: #ffc6a5;
+  --color-accent-400: #f6a06b;
+  --color-accent-500: #d67f48;
+  --color-accent-600: #b2622d;
+  --color-accent-700: #8c491a;
+  --color-accent-800: #643312;
+  --color-accent-900: #402310;
+
+  --color-accent-2-100: #f0fae1;
+  --color-accent-2-200: #e1eecc;
+  --color-accent-2-300: #ccdbb2;
+  --color-accent-2-400: #aebf92;
+  --color-accent-2-500: #8fa073;
+  --color-accent-2-600: #728157;
+  --color-accent-2-700: #56633f;
+  --color-accent-2-800: #3d472b;
+  --color-accent-2-900: #272e1b;
+
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #2e2b25 14%, transparent);
+  --shadow-md: 0 3px 10px color-mix(in srgb, #2e2b25 16%, transparent);
+  --shadow-lg: 0 12px 32px color-mix(in srgb, #2e2b25 22%, transparent);
+
+  /* App variables, repointed at the schema tokens above. */
+  --text: var(--color-neutral-800);
+  --text-h: var(--color-text);
+  --bg: var(--color-bg);
+  --border: var(--color-divider);
+  --code-bg: var(--color-surface);
+  --accent: var(--color-accent);
+  --accent-bg: var(--color-accent-200);
+  --accent-border: var(--color-accent-300);
+  --social-bg: color-mix(in srgb, var(--color-surface) 50%, transparent);
+  --shadow: var(--shadow-md);
+  --accent-contrast: var(--color-bg);
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
@@ -33,22 +77,21 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-    --accent-contrast: #1a1025;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+    /* Dark ground derived from the schema's ramps: deep neutrals with the
+       accent lifted one step (accent-400 on a dark ground, per readme). */
+    --text: var(--color-neutral-300);
+    --text-h: var(--color-neutral-100);
+    --bg: var(--color-neutral-900);
+    --border: color-mix(in srgb, var(--color-neutral-100) 16%, transparent);
+    --code-bg: var(--color-neutral-800);
+    --accent: var(--color-accent-400);
+    --accent-bg: color-mix(in srgb, var(--color-accent-400) 18%, transparent);
+    --accent-border: var(--color-accent-600);
+    --social-bg: color-mix(in srgb, var(--color-neutral-800) 50%, transparent);
+    --shadow-sm: 0 1px 2px color-mix(in srgb, #000 40%, transparent);
+    --shadow-md: 0 3px 10px color-mix(in srgb, #000 45%, transparent);
+    --shadow-lg: 0 12px 32px color-mix(in srgb, #000 55%, transparent);
+    --accent-contrast: var(--color-neutral-900);
   }
 }
 
@@ -66,6 +109,15 @@
 
 body {
   margin: 0;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+a {
+  color: var(--accent);
+  text-underline-offset: 3px;
 }
 
 h1,
