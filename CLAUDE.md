@@ -22,6 +22,22 @@ npm run build                                        # tsc -b && vite build
 npm run lint                                         # oxlint
 ```
 
+Named environments run alongside local dev — `silver` (staging) and
+`capsule-1`/`capsule-2`/`capsule-3` (lower test envs), each with its own
+database, ports, and seeded state:
+
+```
+scripts/pantry-env up silver                     # http://localhost:5100
+scripts/pantry-env up capsule-1 --from <checkout> # run a branch in a real stack
+scripts/pantry-env status | reset <env> | down <env> | logs <env>
+```
+
+Use a capsule (rather than swapping the dev servers) whenever a branch needs
+exercising in a browser, so dev on 8000/5173 stays put. Full detail in
+`docs/ENVIRONMENTS.md`. Anything environment-specific belongs in
+`envs/<name>.env` and `Settings` (`backend/app/config.py`) — never hardcoded
+in application code.
+
 Repo also contains `ticket-tracker/` — a separate, standalone "Jira-lite"
 dev-workflow tool (own backend/frontend/Postgres/ports, no auth). It shares
 this repo for convenience but is unrelated to the recipe app; see
@@ -102,4 +118,5 @@ checklist.
 
 - `docs/MVP.md` — feature spec, explicit non-goals, architecture decision log, data model, ingestion architecture. This is the source of truth for scope and design decisions.
 - `docs/PROJECT_PLAN.md` — build-sequence checklist and open-decisions table; cross-references the GitHub issues above for remaining work.
+- `docs/ENVIRONMENTS.md` — the named environments (Silver + Capsules), how to run a branch in one, and what hosting them would take.
 - `README.md` — one-paragraph project summary and current status.
