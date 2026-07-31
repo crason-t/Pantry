@@ -5,7 +5,7 @@ import type { Recipe } from "../api/types";
 
 export function IngestPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"url" | "text">("url");
+  const [mode, setMode] = useState<"url" | "text" | "recommend">("url");
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -16,8 +16,13 @@ export function IngestPage() {
     setError(null);
     setIsSubmitting(true);
     try {
-      const payload = mode === "url" ? { url } : { text };
-      const recipe = await apiPostJson<Recipe>("/recipes/ingest", payload);
+      const recipe =
+        mode === "recommend"
+          ? await apiPostJson<Recipe>("/recipes/recommend", {})
+          : await apiPostJson<Recipe>(
+              "/recipes/ingest",
+              mode === "url" ? { url } : { text },
+            );
       navigate(`/recipes/${recipe.id}`);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Something went wrong");
@@ -46,6 +51,14 @@ export function IngestPage() {
           />
           Paste recipe text
         </label>
+        <label>
+          <input
+            type="radio"
+            checked={mode === "recommend"}
+            onChange={() => setMode("recommend")}
+          />
+          Recommend from my cookbook
+        </label>
       </div>
       <form onSubmit={handleSubmit}>
         {mode === "url" ? (
@@ -59,7 +72,7 @@ export function IngestPage() {
               required
             />
           </label>
-        ) : (
+        ) : mode === "text" ? (
           <label>
             Recipe text
             <textarea
@@ -69,10 +82,22 @@ export function IngestPage() {
               required
             />
           </label>
+        ) : (
+          <p>
+            Pantry will look at the recipes saved in your cookbook and suggest
+            a new recipe to match those tastes. No input needed — just hit the
+            button.
+          </p>
         )}
         {error && <p role="alert">{error}</p>}
         <button type="submit" className="btn-primary" disabled={isSubmitting}>
-          {isSubmitting ? "Ingesting..." : "Ingest recipe"}
+          {mode === "recommend"
+            ? isSubmitting
+              ? "Finding a recipe..."
+              : "Recommend a recipe"
+            : isSubmitting
+              ? "Ingesting..."
+              : "Ingest recipe"}
         </button>
       </form>
     </div>

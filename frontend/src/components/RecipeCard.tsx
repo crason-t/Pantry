@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import type { RecipeSummary } from "../api/types";
+import type { RecipeCardSummary } from "../api/types";
 
-export function RecipeCard({ recipe }: { recipe: RecipeSummary }) {
+export function RecipeCard({ recipe }: { recipe: RecipeCardSummary }) {
   const hasMeta = recipe.servings != null || recipe.total_time != null;
 
   return (

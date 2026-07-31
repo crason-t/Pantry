@@ -16,6 +16,7 @@ def persist_parsed_recipe(
     user_id: int,
     source_url: str | None = None,
     raw_source_text: str | None = None,
+    is_recommendation: bool = False,
 ) -> Recipe:
     recipe = Recipe(
         title=parsed.title,
@@ -27,6 +28,7 @@ def persist_parsed_recipe(
         source_url=source_url,
         raw_source_text=raw_source_text,
         created_by_user_id=user_id,
+        is_recommendation=is_recommendation,
     )
     db.add(recipe)
     db.flush()  # assigns recipe.id without committing yet

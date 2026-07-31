@@ -78,12 +78,23 @@ export interface SubstitutionSuggestions {
   suggestions: SubstitutionSuggestion[];
 }
 
-export interface RecipeSummary {
+// The fields RecipeCard actually renders — shared by the cookbook and
+// recommendation list shapes, which differ only in their timestamp field.
+export interface RecipeCardSummary {
   id: number;
   title: string;
   servings: number | null;
   total_time: string | null;
+}
+
+export interface RecipeSummary extends RecipeCardSummary {
   saved_at: string;
+}
+
+// One entry in the user's latest recommendation batch
+// (GET/POST /recipes/recommendations).
+export interface RecommendedRecipe extends RecipeCardSummary {
+  created_at: string;
 }
 
 // One ingredient row after this user's ingredient customizations (see
