@@ -1,0 +1,358 @@
+#!/usr/bin/env bash
+#
+# pantry-env -- run named Pantry environments side by side.
+#
+#   pantry-env up silver [--from <checkout>]   start an environment
+#   pantry-env down capsule-1                  stop it
+#   pantry-env reset capsule-1                 wipe its database back to seed
+#   pantry-env status                          what's running, and from where
+#   pantry-env logs capsule-1 [backend|frontend]
+#
+# Environments are defined by the files in envs/ -- each one pins its own
+# ports, database, and signing key, so several can run at once without
+# colliding with each other or with local dev on 8000/5173.
+#
+# --from points an environment at any checkout of this repo (typically a git
+# worktree), which is how a branch gets exercised in a real stack without
+# evicting dev from its ports. It defaults to the checkout this script was
+# run from.
+
+set -euo pipefail
+
+# Project name is pinned so every checkout talks to the same Postgres
+# container -- otherwise Compose would derive it from the directory name and
+# a worktree would silently get its own database server.
+readonly COMPOSE_PROJECT=pantry
+readonly DB_SERVICE=db
+readonly DB_SUPERUSER=pantry
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+readonly SCRIPT_DIR REPO_ROOT
+readonly ENV_DIR="$REPO_ROOT/envs"
+readonly RUN_DIR="$REPO_ROOT/.pantry-env"
+
+err() { printf 'error: %s\n' "$*" >&2; exit 1; }
+info() { printf '  %s\n' "$*"; }
+
+usage() {
+  sed -n '3,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  exit "${1:-0}"
+}
+
+available_envs() {
+  find "$ENV_DIR" -maxdepth 1 -name '*.env' -exec basename {} .env \; | sort
+}
+
+require_env_name() {
+  [ -n "${1:-}" ] || err "which environment? one of: $(available_envs | tr '\n' ' ')"
+  [ -f "$ENV_DIR/$1.env" ] || err "no such environment '$1' (have: $(available_envs | tr '\n' ' '))"
+}
+
+# The .env holding shared secrets is gitignored, so a worktree checkout
+# won't have one. Fall back to the main checkout's copy (a worktree's
+# common git dir points there) rather than making every worktree keep its
+# own duplicate of the API key.
+shared_env_file() {
+  local common
+  if common="$(git -C "$REPO_ROOT" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)"; then
+    printf '%s/.env' "$(dirname "$common")"
+  fi
+}
+
+# Shared secrets first, then the environment's own settings on top, so
+# ANTHROPIC_API_KEY lives in exactly one place and is never copied into a
+# committed per-environment file.
+load_env() {
+  local name="$1" shared
+  set -a
+  shared="$(shared_env_file)"
+  # shellcheck disable=SC1090
+  [ -n "$shared" ] && [ -f "$shared" ] && . "$shared"
+  # shellcheck disable=SC1091
+  [ -f "$REPO_ROOT/.env" ] && [ "$REPO_ROOT/.env" != "$shared" ] && . "$REPO_ROOT/.env"
+  # shellcheck disable=SC1090
+  . "$ENV_DIR/$name.env"
+  set +a
+}
+
+db_container() {
+  docker compose -p "$COMPOSE_PROJECT" -f "$REPO_ROOT/docker-compose.yml" ps -q "$DB_SERVICE"
+}
+
+ensure_postgres() {
+  local container
+  container="$(db_container)"
+  if [ -z "$container" ]; then
+    info "starting Postgres"
+    docker compose -p "$COMPOSE_PROJECT" -f "$REPO_ROOT/docker-compose.yml" up -d "$DB_SERVICE" >/dev/null
+    container="$(db_container)"
+  fi
+  [ -n "$container" ] || err "could not start the Postgres container"
+
+  local i
+  for i in $(seq 1 30); do
+    if docker exec "$container" pg_isready -U "$DB_SUPERUSER" -q 2>/dev/null; then
+      printf '%s' "$container"
+      return 0
+    fi
+    sleep 1
+  done
+  err "Postgres did not become ready"
+}
+
+psql_super() {
+  # No -i: an interactive docker exec would eat the caller's stdin, which
+  # silently truncates loops that read a list while querying per item.
+  docker exec "$1" psql -U "$DB_SUPERUSER" -d postgres -v ON_ERROR_STOP=1 "${@:2}"
+}
+
+database_exists() {
+  [ "$(psql_super "$1" -tAc "SELECT 1 FROM pg_database WHERE datname = '$2'")" = "1" ]
+}
+
+create_database() {
+  local container="$1" dbname="$2"
+  if database_exists "$container" "$dbname"; then
+    return 1
+  fi
+  info "creating database $dbname"
+  psql_super "$container" -q -c "CREATE DATABASE \"$dbname\" OWNER \"$DB_SUPERUSER\""
+  return 0
+}
+
+drop_database() {
+  local container="$1" dbname="$2"
+  info "dropping database $dbname"
+  # Any still-open session would block the drop, so evict them first.
+  psql_super "$container" -q -c \
+    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$dbname' AND pid <> pg_backend_pid()" >/dev/null
+  psql_super "$container" -q -c "DROP DATABASE IF EXISTS \"$dbname\""
+}
+
+migrate_and_seed() {
+  local checkout="$1"
+  info "migrating to head"
+  (cd "$checkout/backend" && uv run --quiet alembic upgrade head >/dev/null)
+  info "seeding test user and glossary"
+  (cd "$checkout/backend" && uv run --quiet python -m app.seed_test_user >/dev/null)
+  (cd "$checkout/backend" && uv run --quiet python -m app.seed_glossary >/dev/null)
+}
+
+pid_file() { printf '%s/%s-%s.pid' "$RUN_DIR" "$1" "$2"; }
+log_file() { printf '%s/%s-%s.log' "$RUN_DIR" "$1" "$2"; }
+checkout_file() { printf '%s/%s.checkout' "$RUN_DIR" "$1"; }
+
+is_running() {
+  local file
+  file="$(pid_file "$1" "$2")"
+  [ -f "$file" ] && kill -0 "$(cat "$file")" 2>/dev/null
+}
+
+# `uv run` and `npm run` each launch the real server as a child, and
+# uvicorn --reload forks again -- so killing just the recorded pid orphans
+# the process actually holding the port. macOS has no setsid, hence walking
+# the tree by hand rather than signalling a process group.
+kill_tree() {
+  local pid="$1" signal="${2:-TERM}" child
+  for child in $(pgrep -P "$pid" 2>/dev/null); do
+    kill_tree "$child" "$signal"
+  done
+  kill "-$signal" "$pid" 2>/dev/null || true
+}
+
+stop_process() {
+  local name="$1" role="$2" file pid
+  file="$(pid_file "$name" "$role")"
+  [ -f "$file" ] || return 0
+  pid="$(cat "$file")"
+  if kill -0 "$pid" 2>/dev/null; then
+    info "stopping $role (pid $pid)"
+    kill_tree "$pid" TERM
+    local i
+    for i in $(seq 1 10); do
+      kill -0 "$pid" 2>/dev/null || break
+      sleep 1
+    done
+    kill -0 "$pid" 2>/dev/null && kill_tree "$pid" KILL
+  fi
+  rm -f "$file"
+}
+
+wait_for_http() {
+  local url="$1" i
+  for i in $(seq 1 45); do
+    if curl -fsS -o /dev/null "$url" 2>/dev/null; then
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
+
+cmd_up() {
+  local name="${1:-}" checkout="$REPO_ROOT"
+  require_env_name "$name"
+  shift
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --from) checkout="$(cd "${2:?--from needs a path}" && pwd)"; shift 2 ;;
+      *) err "unknown option '$1'" ;;
+    esac
+  done
+  [ -f "$checkout/docker-compose.yml" ] || err "--from '$checkout' is not a Pantry checkout"
+
+  # Before this feature the allowed CORS origin was hardcoded to dev's port,
+  # so an older checkout serves an API that rejects its own environment's
+  # frontend. The stack still starts -- but the UI can't call it, which is
+  # baffling unless you're told.
+  if ! grep -q 'settings.cors_origins' "$checkout/backend/app/main.py" 2>/dev/null; then
+    printf 'warning: %s predates per-environment CORS config.\n' "$checkout" >&2
+    printf '         Its API will reject this environment"s frontend; rebase it on master.\n' >&2
+  fi
+
+  load_env "$name"
+  mkdir -p "$RUN_DIR"
+  printf '%s\n' "$checkout" > "$(checkout_file "$name")"
+
+  printf '%s: starting from %s\n' "$name" "$checkout"
+
+  local container
+  container="$(ensure_postgres)"
+  if create_database "$container" "$PANTRY_DB_NAME"; then
+    migrate_and_seed "$checkout"
+  else
+    # Existing database: still migrate, since the checkout may carry
+    # migrations this environment hasn't applied yet.
+    migrate_and_seed "$checkout"
+  fi
+
+  if is_running "$name" backend; then
+    info "backend already running on $PANTRY_BACKEND_PORT"
+  else
+    info "starting backend on $PANTRY_BACKEND_PORT"
+    (
+      cd "$checkout/backend"
+      nohup uv run uvicorn app.main:app --reload --port "$PANTRY_BACKEND_PORT" \
+        > "$(log_file "$name" backend)" 2>&1 &
+      printf '%s\n' "$!" > "$(pid_file "$name" backend)"
+    )
+  fi
+
+  if [ ! -d "$checkout/frontend/node_modules" ]; then
+    info "installing frontend dependencies"
+    (cd "$checkout/frontend" && npm install --silent >/dev/null 2>&1)
+  fi
+
+  if is_running "$name" frontend; then
+    info "frontend already running on $PANTRY_FRONTEND_PORT"
+  else
+    info "starting frontend on $PANTRY_FRONTEND_PORT"
+    (
+      cd "$checkout/frontend"
+      VITE_API_BASE_URL="http://localhost:$PANTRY_BACKEND_PORT" \
+      VITE_ENV_NAME="$PANTRY_ENV_NAME" \
+        nohup npm run dev -- --port "$PANTRY_FRONTEND_PORT" --strictPort \
+        > "$(log_file "$name" frontend)" 2>&1 &
+      printf '%s\n' "$!" > "$(pid_file "$name" frontend)"
+    )
+  fi
+
+  if wait_for_http "http://localhost:$PANTRY_BACKEND_PORT/health" &&
+     wait_for_http "http://localhost:$PANTRY_FRONTEND_PORT/"; then
+    printf '%s is up: http://localhost:%s (api :%s)\n' \
+      "$name" "$PANTRY_FRONTEND_PORT" "$PANTRY_BACKEND_PORT"
+  else
+    err "$name did not come up -- see: pantry-env logs $name"
+  fi
+}
+
+cmd_down() {
+  local name="${1:-}"
+  require_env_name "$name"
+  printf '%s: stopping\n' "$name"
+  stop_process "$name" frontend
+  stop_process "$name" backend
+  rm -f "$(checkout_file "$name")"
+}
+
+cmd_reset() {
+  local name="${1:-}"
+  require_env_name "$name"
+  load_env "$name"
+
+  local checkout="$REPO_ROOT" was_running=no
+  [ -f "$(checkout_file "$name")" ] && checkout="$(cat "$(checkout_file "$name")")"
+  if is_running "$name" backend || is_running "$name" frontend; then
+    was_running=yes
+  fi
+
+  printf '%s: resetting %s\n' "$name" "$PANTRY_DB_NAME"
+  # The backend holds open connections, so it has to let go before the drop.
+  stop_process "$name" backend
+
+  local container
+  container="$(ensure_postgres)"
+  drop_database "$container" "$PANTRY_DB_NAME"
+  create_database "$container" "$PANTRY_DB_NAME" || true
+  migrate_and_seed "$checkout"
+
+  if [ "$was_running" = yes ]; then
+    stop_process "$name" frontend
+    cmd_up "$name" --from "$checkout"
+  else
+    printf '%s: reset to a clean seeded database\n' "$name"
+  fi
+}
+
+cmd_status() {
+  local container name
+  container="$(db_container)"
+  printf '%-11s %-8s %-24s %-9s %s\n' ENV STATUS URL DATABASE CODE
+  while read -r name; do
+    load_env "$name"
+    local status="stopped" url="-" dbstate="-" code="-"
+    if is_running "$name" backend && is_running "$name" frontend; then
+      status="running"
+    elif is_running "$name" backend || is_running "$name" frontend; then
+      status="partial"
+    fi
+    [ "$status" = stopped ] || url="http://localhost:$PANTRY_FRONTEND_PORT"
+    if [ -n "$container" ] && database_exists "$container" "$PANTRY_DB_NAME"; then
+      dbstate="ready"
+    else
+      dbstate="absent"
+    fi
+    [ -f "$(checkout_file "$name")" ] && code="$(basename "$(cat "$(checkout_file "$name")")")"
+    printf '%-11s %-8s %-24s %-9s %s\n' "$name" "$status" "$url" "$dbstate" "$code"
+  done < <(available_envs)
+}
+
+cmd_logs() {
+  local name="${1:-}" role="${2:-backend}"
+  require_env_name "$name"
+  case "$role" in
+    backend|frontend) ;;
+    *) err "role must be 'backend' or 'frontend'" ;;
+  esac
+  local file
+  file="$(log_file "$name" "$role")"
+  [ -f "$file" ] || err "no $role log for $name yet"
+  tail -n 50 -f "$file"
+}
+
+main() {
+  local command="${1:-}"
+  [ $# -gt 0 ] && shift
+  case "$command" in
+    up) cmd_up "$@" ;;
+    down) cmd_down "$@" ;;
+    reset) cmd_reset "$@" ;;
+    status) cmd_status "$@" ;;
+    logs) cmd_logs "$@" ;;
+    ""|-h|--help|help) usage 0 ;;
+    *) printf 'error: unknown command %s\n\n' "$command" >&2; usage 1 ;;
+  esac
+}
+
+main "$@"
