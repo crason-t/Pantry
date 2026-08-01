@@ -16,3 +16,7 @@ dist/
 
 # Claude Code local settings (machine-specific, not shared project config)
 .claude/settings.local.json
+.claude/worktrees/
+
+# pantry-env runtime state (pids, logs, which checkout each env runs)
+.pantry-env/

@@ -9,11 +9,15 @@ from app.models.recipe import Recipe
 from app.models.recipe_insight import RecipeInsight
 from app.models.saved_recipe import SavedRecipe
 from app.models.user import User
-from app.schemas.recipe import RecipeRead, RecipeSummary
+from app.schemas.recipe import RecipeRead, RecipeSummary, RecommendationSummary
 from app.schemas.substitution import SubstitutionSuggestions
 from app.services.ingestion.pipeline import ingest_from_text, ingest_from_url
 from app.services.insights import generate_recipe_insights
 from app.services.recipes import persist_parsed_recipe, persist_generated_recipe_content
+from app.services.recommendations import (
+    generate_recipe_recommendation,
+    generate_recipe_recommendation_batch,
+)
 from app.services.substitutions import generate_ingredient_substitutions
 
 logger = logging.getLogger(__name__)
@@ -92,6 +96,103 @@ def list_cookbook(
         }
         for saved, recipe in rows
     ]
+
+
+_EMPTY_COOKBOOK_DETAIL = (
+    "Save a few recipes to your cookbook first — recommendations are based on what you've saved."
+)
+
+
+def _load_cookbook_recipes_or_400(db: Session, user_id: int) -> list[Recipe]:
+    """The user's saved recipes with ingredients eagerly loaded (the taste
+    context recommendation prompts are built from); 400 if the cookbook is
+    empty."""
+    cookbook_recipes = (
+        db.query(Recipe)
+        .join(SavedRecipe, SavedRecipe.recipe_id == Recipe.id)
+        .options(selectinload(Recipe.ingredients))
+        .filter(SavedRecipe.user_id == user_id)
+        .order_by(SavedRecipe.saved_at.desc())
+        .all()
+    )
+    if not cookbook_recipes:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=_EMPTY_COOKBOOK_DETAIL)
+    return cookbook_recipes
+
+
+def _persist_recommendation(db: Session, parsed, user_id: int) -> Recipe:
+    """Persist one generated recipe plus the same best-effort insights block
+    /ingest uses."""
+    recipe = persist_parsed_recipe(db, parsed, user_id, is_recommendation=True)
+    try:
+        generated = generate_recipe_insights(db, recipe)
+        persist_generated_recipe_content(db, recipe, generated)
+    except Exception:
+        # Best-effort: insight generation is a nice-to-have. A Claude/parsing
+        # failure here shouldn't fail the whole recommendation -- the recipe
+        # is already persisted and usable without its insights.
+        logger.exception("Insight generation failed for recipe %s", recipe.id)
+    return recipe
+
+
+@router.post("/recommend", response_model=RecipeRead, status_code=status.HTTP_201_CREATED)
+def recommend_recipe(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Recipe:
+    # No request body -- the recommendation is driven entirely by the user's
+    # saved cookbook. (Declaring no body param also means an empty `{}` body
+    # from the client is simply ignored.)
+    cookbook_recipes = _load_cookbook_recipes_or_400(db, current_user.id)
+
+    try:
+        parsed = generate_recipe_recommendation(cookbook_recipes)
+    except Exception:
+        logger.exception("Recipe recommendation failed for user %s", current_user.id)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Could not generate a recommendation right now",
+        )
+
+    recipe = _persist_recommendation(db, parsed, current_user.id)
+    return _get_recipe_or_404(db, recipe.id)
+
+
+@router.get("/recommendations", response_model=list[RecommendationSummary])
+def list_recommendations(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[Recipe]:
+    return (
+        db.query(Recipe)
+        .filter(Recipe.created_by_user_id == current_user.id, Recipe.is_recommendation.is_(True))
+        .order_by(Recipe.created_at.desc(), Recipe.id.desc())
+        .limit(3)
+        .all()
+    )
+
+
+@router.post(
+    "/recommendations", response_model=list[RecommendationSummary], status_code=status.HTTP_201_CREATED
+)
+def create_recommendations(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> list[Recipe]:
+    cookbook_recipes = _load_cookbook_recipes_or_400(db, current_user.id)
+
+    try:
+        parsed_batch = generate_recipe_recommendation_batch(cookbook_recipes)
+    except Exception:
+        logger.exception("Recipe recommendation batch failed for user %s", current_user.id)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Could not generate recommendations right now",
+        )
+
+    # The prompt asks for exactly 3, but cap defensively -- Claude's output
+    # shape is validated, not its count.
+    return [_persist_recommendation(db, parsed, current_user.id) for parsed in parsed_batch[:3]]
 
 
 @router.get("/{recipe_id}", response_model=RecipeRead)

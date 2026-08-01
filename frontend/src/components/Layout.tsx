@@ -8,7 +8,7 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="app-shell">
       <header className="app-nav">
-        <Link to="/cookbook" className="app-nav-brand">
+        <Link to="/" className="app-nav-brand">
           Pantry
         </Link>
         <nav className="app-nav-links">

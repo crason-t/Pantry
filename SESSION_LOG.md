@@ -1,68 +1,90 @@
 # Pantry — Session Log
 
-## Current State (as of 2026-07-29, late evening)
+## Current State (as of 2026-07-29, late night)
 
 Carson's standing punch-list lives in `docs/Carson's Notes.md` (off-limits
-to edit). Item status:
-1. Recipe-ingestion bug (ingredient names sometimes include duplicated
-   measurement text) — still needs a screenshot from Carson; not fixed
-   (PANTRY-8 / #16 on the board, high priority).
-2. Save progress on all jobs + push all changes — done.
-3. Redesign the Cookbook tab — done and merged (PR #9, card grid).
-4. Design system via "Claude Design" — brand-identity Artifact drafted as a
-   proposal (see history), not yet applied to `frontend/`, awaiting
-   Carson's read.
-5. Jira-lite ticket tracker — done and merged (PR #24); now also has
-   per-ticket test links and in-UI editing (PR #32).
-6. Dev-session-startup skill — **done and merged** (PR #30,
-   `/start-session`).
+to edit). Item 4 (design system) is now actively in flight: Carson supplied
+the "Organic" branding schema at `resources/Pantry app branding schema/`
+and the work is split across the **Branding** milestone (GitHub milestone
+9 / board epic 8) as #34 (typography) + #35 (colors).
 
-- **Session workflow now has both bookends:** `/start-session` (probes all
-  six dev services, starts only what's missing, verifies health, orients
-  from the board + this log) and `/save-progress`. First live run of
-  `/start-session` found everything already up and only did orientation.
-- Ticket tracker upgrades live (PR #32, migration 0003 applied): optional
-  `test_url` on every ticket ("Test this feature ↗" on the detail page,
-  input on the new-ticket form, activity-logged changes) and a detail-page
-  **Edit** mode for title/description/acceptance criteria/labels/test URL.
-- **Deploy gotcha found & fixed:** the 8010 tracker backend had been
-  started *without* `--reload`, so it kept serving pre-merge code after
-  the pull; restarted with `--reload` (matching the README) so future
-  merges hot-reload. Pantry backend (8000) already ran with `--reload`.
-- App end-to-end state unchanged from the merge sweep: auth, ingestion,
-  insights/tips, cookbook card grid, substitutions, per-user ingredient
-  customization, scrollable step cards. Remaining feature areas:
-  adaptations (#2), serving-scale (#3), guided cook mode (#4), polish
-  (#5, #7, #16).
-- **Still no manual browser click-through** of the merged feature PRs —
-  recipe detail (where #10/#11/#20 landed) remains the page to poke
-  first. Known cosmetic gap: custom-added ingredients show the
-  substitution panel's error state (no canonical ingredient id).
-- Board state: PANTRY-2/3/4/5 backlog, PANTRY-8 backlog (high),
-  PANTRY-12/14/15 done this session. **PANTRY-1 sits in_review but its
-  PR (#10) merged in the previous session — move it to done.**
-- Worktrees still present: `pantry-worktrees/recipe-customization`
-  (Carson's ad hoc servers :8001/:5175 + deliberate uncommitted CORS
-  tweak — tear down whenever done);
-  `.claude/worktrees/ticket-board-claude-workflow` (locked, other
-  session). This session's worktrees (`start-session-skill`,
-  `tracker-edit-testlink`) are merged and clean — removed at session
-  end along with their local branches.
-- Issue state: #29 (start-session skill) and #31 (tracker test-link +
-  editing) closed by this session's merges. **Close candidates carried
-  over (proposed, not closed): #1 (substitutions), #12 (subagents),
-  #17 (ticket tracker), #23 (save-progress extension).** Closing #1
-  fully closes the "Ingredient substitutions" milestone (auto-release);
-  "Dev tooling" closes once #12+#23 do; "Ticket tracker" once #17 does.
-- Untracked in the main checkout: `docs/Carson's Notes.md`, `resources/`,
-  and `.claude/worktrees/` — consider gitignoring to quiet `git status`.
-- No automated tests exist anywhere (`pytest` listed but unused; no
-  frontend tests; CI runs no tests/lint on PRs) — still an open decision
-  for a single-user MVP.
+- **Open PRs:** #37 (brand colors, ready for review — this session),
+  #36 (Caprasimo/Figtree typography, draft — parallel session; its branch
+  also checks in `resources/`), #33 (session-log update for the earlier
+  start-session/tracker session, draft). Master is `c4cb930`.
+- **PANTRY-17 / #35 / PR #37 (this session):** frontend fully recolored to
+  the Organic schema — full token set + ramps in
+  `frontend/src/index.css:1-96`, legacy app vars repointed at schema
+  tokens, dark mode derived from the neutral ramp (accent lifted to
+  accent-400), hardcoded greens/ambers/reds in `App.css` remapped to ramp
+  steps, bare-anchor rule added (auth-page links rendered UA blue).
+  Build+lint clean; verified in Chrome light+dark by pantry-ui-verify
+  (zero purple remnants). Board ticket `in_review`.
+- **Dev-server / port state (important):** backend CORS allows ONLY origin
+  `http://localhost:5173` (`backend/app/main.py:12`), so worktree frontend
+  builds must be served on 5173 to test login. Right now **5173 serves the
+  pantry-17-brand-colors worktree preview** (Carson reviewed and approved
+  it); the main checkout's vite is stopped. After #37 merges, restart the
+  main frontend on 5173. Ticket board on 5180; Carson's ad hoc
+  recipe-customization servers on 8001/5175.
+- `pantry-worktrees/recipe-customization` still carries its deliberate
+  uncommitted CORS tweak (adds `localhost:5175`) for Carson's ad hoc
+  servers — leave as is; tear down whenever done (PR long merged).
+- **Close candidates still open from last session:** #1, #12, #17, #23
+  (see previous entry for milestone-release implications). #35 will
+  auto-close when #37 merges ("Closes #35" in the PR body).
+- Follow-ups without tickets yet: favicon still uses the old purple mark
+  (asset redesign — graphic-design skill); Chrome autofill tints inputs
+  pale blue (cosmetic); custom-ingredient substitution error state (from
+  last session); PROJECT_PLAN.md has no Branding-milestone section.
+- Untracked by design in main checkout: `docs/Carson's Notes.md`,
+  `.claude/worktrees/`, and `resources/` (the latter lands via PR #36).
+- No automated tests anywhere — unchanged open decision.
 
 ---
 
 ## History
+
+### 2026-07-29 (late night — PANTRY-17 brand colors)
+**Did:**
+- Recolored the whole frontend to the "Organic" branding schema
+  (`resources/Pantry app branding schema/`): schema token set + OKLCH
+  ramps + shadows added to `frontend/src/index.css`, legacy app vars
+  (`--bg`, `--accent`, …) repointed at them; dark mode rebuilt from the
+  neutral ramp (accent lifted to accent-400 per schema guidance);
+  hardcoded off-palette colors in `frontend/src/App.css` (alert red,
+  insight-tag greens/ambers, callout tints) remapped to ramp steps.
+- pantry-ui-verify browser pass (light+dark) caught bare `<a>` links
+  rendering UA blue on auth pages → added the schema's anchor rule.
+- Shipped as PR #37 (issue #35, Branding milestone, created this
+  session), reviewed and approved by Carson in-browser, marked ready for
+  review. Board: PANTRY-17 → `in_review`, PR comment + test link set.
+- Ops: discovered backend CORS only allows origin 5173 (worktree builds
+  must be served there to log in — saved to memory); untangled stale vite
+  instances and left 5173 serving the pantry-17 worktree preview at
+  Carson's request (main frontend vite stopped until #37 merges).
+
+**Decisions:**
+- Kept the existing CSS variable names and repointed them at schema
+  tokens instead of renaming usages — smaller diff, every rule compliant.
+- Schema defines light only; dark derived from its ramps (readme
+  anticipates dark grounds) rather than dropping dark mode.
+- Alert/error color = deep terracotta `--color-accent-700` (schema has no
+  red; stayed on-palette).
+- Scoped strictly to colors/shadows — typography stays with PANTRY-13/#34
+  (parallel session, PR #36); favicon (still purple) left for its own
+  ticket since it's an asset redesign.
+
+**Next:**
+- Merge #37 (auto-closes #35), flip PANTRY-17 → done, restart the main
+  frontend on 5173.
+- Reconcile the three log-touching branches when merging (#33, #36, #37) —
+  Current State conflicts are expected; newest wins.
+- Ticket the favicon redesign (graphic-design skill) under Branding.
+
+**Open questions / blockers:**
+- Chrome autofill tints inputs pale blue on the cream ground — override
+  `-webkit-autofill` or accept? Cosmetic.
 
 ### 2026-07-29 (late evening — start-session skill + tracker test links/editing)
 **Did:**

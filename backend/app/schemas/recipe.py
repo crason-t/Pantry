@@ -74,6 +74,20 @@ class RecipeRead(BaseModel):
     tips: list[RecipeTipRead]
 
 
+class RecommendationSummary(BaseModel):
+    """Lightweight shape for the homepage recommendations list -- like
+    RecipeSummary, but recommendations aren't cookbook-saved, so the
+    timestamp is the recipe's own created_at."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    servings: int | None
+    total_time: str | None
+    created_at: datetime
+
+
 class RecipeSummary(BaseModel):
     """Lightweight shape for cookbook list views -- no ingredients/steps."""
 

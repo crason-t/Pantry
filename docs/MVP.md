@@ -40,6 +40,18 @@ work, not part of this build.
    time. Explicitly **not** voice/hands-free for MVP.
 8. **Cookbook** — save ingested recipes to a personal collection tied to the
    user's account.
+9. **Recipe recommendation** — a third option alongside URL/pasted-text
+   ingestion: Claude looks at the recipes saved in the user's cookbook and
+   generates one new recipe to match those tastes (complementary, not a
+   duplicate of anything saved). The result flows through the same
+   `ParsedRecipe` persistence path as ingested recipes, so it gets the full
+   structured layout, insights, and cookbook behavior for free. Requires a
+   non-empty cookbook. Surfaced in two places: the third ingest option
+   (one recipe at a time), and a **Homepage** (reached via the Pantry logo
+   in the nav) with a "Recommended Recipes" section showing the latest
+   batch of up to 3 recommendations (one Claude call generates the batch;
+   recipes are persisted with an `is_recommendation` flag so the homepage
+   can re-show the latest batch).
 
 ## Explicit Non-Goals (MVP)
 
@@ -131,3 +143,9 @@ services/ingestion/
 Both paths converge on one internal `ParsedRecipe` Pydantic schema before
 persistence, so downstream logic never needs to know which path produced the
 data.
+
+Recipe recommendation (`services/recommendations.py`, `POST
+/recipes/recommend`) is a third producer of `ParsedRecipe`: instead of
+parsing a source, Claude generates a new recipe from the titles/ingredients
+of the user's saved cookbook, and the result is persisted through the same
+path (no `source_url`/`raw_source_text`).
