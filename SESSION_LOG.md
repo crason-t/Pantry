@@ -86,6 +86,49 @@ and the work is split across the **Branding** milestone (GitHub milestone
 - Chrome autofill tints inputs pale blue on the cream ground — override
   `-webkit-autofill` or accept? Cosmetic.
 
+### 2026-07-29 (late evening — start-session skill + tracker test links/editing)
+**Did:**
+- Built and merged the `/start-session` skill
+  (`.claude/skills/start-session/SKILL.md`, PR #30, closed #29): probes
+  all six dev services first, starts only what's missing (background
+  tasks, `alembic upgrade head` always), polls health before reporting,
+  then orients from the board + this log. First run: all services
+  already up, orientation only.
+- Ticket tracker features (PR #32, closed #31; board PANTRY-14/15):
+  - `test_url` end-to-end — model + migration 0003, schemas, optional
+    input on the new-ticket form, "Test this feature ↗" link on the
+    detail page, changes activity-logged (TRACKED_FIELDS in
+    `ticket-tracker/backend/app/api/routes/tickets.py`).
+  - Detail-page **Edit** mode — pre-filled form for
+    title/description/AC/labels/test URL saved via one PATCH (backend
+    already accepted all fields); label chips now render on the detail
+    page.
+- Verified before merge: migration applied to the live tracker DB
+  (additive), worktree backend exercised on scratch port 8011
+  (create/edit/null-clear/activity via curl), `npm run build` + `oxlint`
+  clean.
+- Post-merge: found 8010 serving stale code (started without
+  `--reload`), restarted it per the README; confirmed `test_url` live
+  and set self-referential test links on PANTRY-14/15 as a production
+  exercise of the feature.
+- Board hygiene throughout: PANTRY-12/14/15 created with AC before
+  implementation, moved in_progress → in_review (PR linked) → done
+  (merge linked).
+**Decisions:**
+- Only `test_url` joined the activity-logged TRACKED_FIELDS (values
+  truncated to the 255-char activity columns); title/description/AC
+  edits aren't activity-logged — long-text diffs don't fit the feed's
+  old→new shape.
+- The edit form requires non-empty title *and* acceptance criteria —
+  blank AC would null it via PATCH, silently violating the board's
+  AC-required rule.
+**Next:**
+- Manual click-through of recipe detail + cookbook grid (carried over).
+- Move PANTRY-1 to done (stale in_review; its PR #10 merged last
+  session).
+- Carson to confirm close candidates #1, #12, #17, #23 (milestone
+  auto-releases fire on full closure).
+
 ### 2026-07-29 (evening — cleanup + PR merge sweep)
 **Did:**
 - Directory cleanup: fast-forwarded stale local master, deleted leftover
