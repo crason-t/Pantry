@@ -64,6 +64,7 @@ class TestUrlIngestionUsesJsonld:
         recipe = pipeline.ingest_from_url("https://example.com/chicken")
 
         assert not claude.called
+        assert recipe.title == 'DELIBERATELY WRONG - ci self-test'
         assert recipe.title == "Sheet-Pan Chicken Thighs"
         assert len(recipe.ingredients) == 3
         assert len(recipe.steps) == 3
