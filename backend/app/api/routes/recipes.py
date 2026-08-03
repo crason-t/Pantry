@@ -11,6 +11,7 @@ from app.models.saved_recipe import SavedRecipe
 from app.models.user import User
 from app.schemas.recipe import RecipeRead, RecipeSummary, RecommendationSummary
 from app.schemas.substitution import SubstitutionSuggestions
+from app.services.ingestion.claude_extractor import RecipeExtractionUnavailable
 from app.services.ingestion.pipeline import ingest_from_text, ingest_from_url
 from app.services.insights import generate_recipe_insights
 from app.services.recipes import persist_parsed_recipe, persist_generated_recipe_content
@@ -53,14 +54,21 @@ def ingest_recipe(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> Recipe:
-    if payload.url:
-        parsed = ingest_from_url(payload.url)
-        recipe = persist_parsed_recipe(db, parsed, current_user.id, source_url=payload.url)
-    elif payload.text:
-        parsed = ingest_from_text(payload.text)
-        recipe = persist_parsed_recipe(db, parsed, current_user.id, raw_source_text=payload.text)
-    else:
+    if not payload.url and not payload.text:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Provide either url or text")
+
+    try:
+        if payload.url:
+            parsed = ingest_from_url(payload.url)
+            recipe = persist_parsed_recipe(db, parsed, current_user.id, source_url=payload.url)
+        else:
+            parsed = ingest_from_text(payload.text)
+            recipe = persist_parsed_recipe(db, parsed, current_user.id, raw_source_text=payload.text)
+    except RecipeExtractionUnavailable as err:
+        # Transient -- the caller should retry rather than see a bare 500.
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(err)
+        ) from err
 
     try:
         generated = generate_recipe_insights(db, recipe)
