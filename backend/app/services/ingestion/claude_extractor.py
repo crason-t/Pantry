@@ -1,5 +1,32 @@
+import logging
+
+import anthropic
+
 from app.schemas.recipe import ParsedRecipe
 from app.services.claude_client import get_claude_client, get_model
+
+logger = logging.getLogger(__name__)
+
+
+class RecipeExtractionUnavailable(RuntimeError):
+    """Extraction couldn't complete for a transient reason. Callers should
+    surface a retry-able error rather than letting it become a 500."""
+
+
+# Structured outputs compile ParsedRecipe into a decoding grammar server-side.
+# That compile happens once per schema and is then cached ~24h, so the first
+# extraction after an idle day (or after any ParsedRecipe/ParsedIngredient/
+# ParsedStep edit) pays it and can exceed the API's time limit -- measured at
+# 97s cold vs 5s warm. The API reports that as a 400, which the SDK does not
+# retry, so we retry it once ourselves; the second attempt benefits from the
+# compile work the first one already did.
+_GRAMMAR_TIMEOUT_MARKER = "grammar compilation timed out"
+
+
+def _is_grammar_compilation_timeout(err: anthropic.BadRequestError) -> bool:
+    detail = f"{getattr(err, 'message', '') or ''} {err}".lower()
+    return _GRAMMAR_TIMEOUT_MARKER in detail
+
 
 EXTRACTION_PROMPT = (
     "Extract the recipe below into structured form: title, servings, "
@@ -31,12 +58,42 @@ EXTRACTION_PROMPT = (
 def extract_recipe_with_claude(text: str) -> ParsedRecipe:
     """Structured-output extraction -- used as the URL-ingestion fallback
     when JSON-LD is absent/incomplete, and unconditionally for pasted text
-    (no structured markup to check there)."""
+    (no structured markup to check there).
+
+    Raises RecipeExtractionUnavailable if a grammar-compilation timeout
+    survives one retry. Every other API error propagates untouched.
+    """
     client = get_claude_client()
-    response = client.messages.parse(
-        model=get_model(),
-        max_tokens=4096,
-        messages=[{"role": "user", "content": EXTRACTION_PROMPT + text}],
-        output_format=ParsedRecipe,
-    )
-    return response.parsed_output
+    attempts = 2
+
+    for attempt in range(1, attempts + 1):
+        try:
+            response = client.messages.parse(
+                model=get_model(),
+                max_tokens=4096,
+                messages=[{"role": "user", "content": EXTRACTION_PROMPT + text}],
+                output_format=ParsedRecipe,
+            )
+            return response.parsed_output
+        except anthropic.BadRequestError as err:
+            if not _is_grammar_compilation_timeout(err):
+                raise
+            if attempt == attempts:
+                logger.warning(
+                    "Recipe extraction gave up after %s grammar-compilation timeouts "
+                    "(last request_id=%s)",
+                    attempts,
+                    getattr(err, "request_id", None),
+                )
+                raise RecipeExtractionUnavailable(
+                    "Recipe extraction is warming up and timed out. Try again in a moment."
+                ) from err
+            logger.warning(
+                "Grammar compilation timed out on attempt %s/%s (request_id=%s); retrying",
+                attempt,
+                attempts,
+                getattr(err, "request_id", None),
+            )
+
+    # Unreachable: the loop either returns or raises.
+    raise AssertionError("extract_recipe_with_claude exhausted its retry loop")
